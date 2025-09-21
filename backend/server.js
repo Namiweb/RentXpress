@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
 import express from "express"
 import dbconnection from "./config/dbconnection.js";
+import invoiceRoutes from "./routes/InvoiceRoutes.js";
 
 const app = express();
 
-//middleware
-app.use("/", (req, res, next) => {
-    res.send("IT is working now");
-})
+app.use(express.json());
 
+app.use("/api/Invoice", invoiceRoutes);
 
 const PORT = 8585
 
