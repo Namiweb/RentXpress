@@ -1,17 +1,16 @@
 import express from "express";
 import {
   createVehicle,
-  getVehicles,
+  getAllVehicles,
   getVehicleById,
   updateVehicle,
   deleteVehicle
-} from "../controller/VehicleControllers.js";
+} from "../controller/VehiclesControllers.js";
 
-const 
-router = express.Router();
+const router = express.Router();
 
 router.post("/", createVehicle);
-router.get("/", getVehicles);
+router.get("/", getAllVehicles);
 router.get("/:id", getVehicleById);
 router.put("/:id", updateVehicle);
 router.delete("/:id", deleteVehicle);

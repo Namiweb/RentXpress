@@ -1,6 +1,6 @@
 import express from "express"
 import dbconnection from "./config/dbconnection.js";
-import vehicleRoutes from "./routes/VehicleRoutes.js";
+import vehicleRoutes from "./routes/VehiclesRoutes.js";
 import tripRoutes from "./routes/TripRoutes.js"; 
 
 
