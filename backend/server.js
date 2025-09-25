@@ -1,6 +1,6 @@
 import express from "express";
 import dbconnection from "./config/dbconnection.js";
-import UserRoutes from "./routes/UserRoutes.js";
+
 //import vehicleRoutes from "./routes/VehicleRoutes.js";
 import driverApplicationRoutes from "./routes/DriverApplicationRoutes.js";
 
@@ -11,9 +11,10 @@ import driverScheduleRoutes from "./routes/DriverSchedulesRoutes.js";
 const app = express();
 app.use(express.json());
 
-// API routes
-app.use("/api", UserRoutes);
+
+
 //app.use("/api/vehicles", vehicleRoutes);
+
 app.use("/api/driver-applications", driverApplicationRoutes);
 
 app.use("/api/driver-earnings", driverEarningsRoutes);

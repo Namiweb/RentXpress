@@ -1,69 +1,66 @@
 import DriverApplication from "../models/DriverApplication.js";
 
-// Create a driver application
+// Create application
 export const createDriverApplication = async (req, res) => {
   try {
-    const application = new DriverApplication(req.body);
-    await application.save();
-    res.status(201).json(application);
+    const newApplication = new DriverApplication(req.body);
+    await newApplication.save();
+    res.status(201).json(newApplication);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// Get all driver applications
-export const getAllDriverApplications = async (req, res) => {
+// Get all applications (populate driver + vehicle)
+export const getDriverApplications = async (req, res) => {
   try {
-    const applications = await DriverApplication.find();
-    res.json(applications); // return only the array
+    const apps = await DriverApplication.find()
+      .populate("driverId", "profile email role")
+      .populate("vehicleId", "basicInfo pricing status");
+    res.status(200).json(apps);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get driver application by ID
+// Get single application by id
 export const getDriverApplicationById = async (req, res) => {
   try {
-    const application = await DriverApplication.findById(req.params.id);
-    if (!application) return res.status(404).json({ error: "Application not found" });
-    res.json(application);
+    const app = await DriverApplication.findById(req.params.id)
+      .populate("driverId", "profile email role")
+      .populate("vehicleId", "basicInfo pricing status");
+    if (!app) return res.status(404).json({ error: "Application not found" });
+    res.status(200).json(app);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Update driver application
+// Update application
 export const updateDriverApplication = async (req, res) => {
   try {
-    const application = await DriverApplication.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!application) return res.status(404).json({ error: "Application not found" });
-    res.json(application);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
-// Update only status
-export const updateDriverApplicationStatus = async (req, res) => {
-  try {
-    const application = await DriverApplication.findByIdAndUpdate(
+    const updatedApp = await DriverApplication.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
-      { new: true }
+      req.body,
+      { new: true, runValidators: true }
     );
-    if (!application) return res.status(404).json({ error: "Application not found" });
-    res.json(application);
+    if (!updatedApp)
+      return res.status(404).json({ error: "Application not found" });
+    res.status(200).json(updatedApp);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// Delete driver application
+// Delete application
 export const deleteDriverApplication = async (req, res) => {
   try {
-    const application = await DriverApplication.findByIdAndDelete(req.params.id);
-    if (!application) return res.status(404).json({ error: "Application not found" });
-    res.json({ message: "Application deleted" });
+    const deletedApp = await DriverApplication.findByIdAndDelete(
+      req.params.id
+    );
+    if (!deletedApp)
+      return res.status(404).json({ error: "Application not found" });
+    res.status(200).json({ message: "Application deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
