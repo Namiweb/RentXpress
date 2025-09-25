@@ -38,3 +38,4 @@ const driverApplicationSchema = new Schema(
 );
 
 export default mongoose.model("Driver_Application", driverApplicationSchema);
+

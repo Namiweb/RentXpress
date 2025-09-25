@@ -10,6 +10,7 @@ export const createDriverEarnings = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+ 
 
 // Get all driver earnings
 export const getAllDriverEarnings = async (req, res) => {

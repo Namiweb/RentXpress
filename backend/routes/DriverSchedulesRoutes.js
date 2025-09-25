@@ -16,3 +16,4 @@ router.put("/:id", updateDriverSchedule);
 router.delete("/:id", deleteDriverSchedule);
 
 export default router;
+

@@ -16,3 +16,4 @@ router.put("/:id", updateDriverApplication);
 router.delete("/:id", deleteDriverApplication);
 
 export default router;
+

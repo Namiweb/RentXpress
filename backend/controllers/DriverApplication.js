@@ -52,6 +52,7 @@ export const updateDriverApplication = async (req, res) => {
   }
 };
 
+
 // Delete application
 export const deleteDriverApplication = async (req, res) => {
   try {

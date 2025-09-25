@@ -22,3 +22,4 @@ const driverPaymentSchema = new Schema({
 }, { timestamps: true });
 
 export default mongoose.model("Driver_Payment", driverPaymentSchema);
+

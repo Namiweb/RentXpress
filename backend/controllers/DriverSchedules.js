@@ -44,6 +44,7 @@ export const updateDriverSchedule = async (req, res) => {
   }
 };
 
+
 // Delete driver schedule
 export const deleteDriverSchedule = async (req, res) => {
   try {

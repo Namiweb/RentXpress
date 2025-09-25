@@ -16,3 +16,4 @@ router.put("/:id", updateDriverEarnings);
 router.delete("/:id", deleteDriverEarnings);
 
 export default router;
+

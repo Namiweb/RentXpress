@@ -21,6 +21,7 @@ export const getAllDriverPayments = async (req, res) => {
   }
 };
 
+
 // Get driver payment by ID
 export const getDriverPaymentById = async (req, res) => {
   try {

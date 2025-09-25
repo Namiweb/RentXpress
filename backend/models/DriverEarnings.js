@@ -36,3 +36,4 @@ const driverEarningsSchema = new Schema({
 }, { timestamps: true });
 
 export default mongoose.model("Driver_Earnings", driverEarningsSchema);
+

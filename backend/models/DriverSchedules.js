@@ -10,3 +10,4 @@ const driverScheduleSchema = new Schema({
 }, { timestamps: true });
 
 export default mongoose.model("Driver_Schedules", driverScheduleSchema);
+
