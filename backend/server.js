@@ -5,6 +5,9 @@ import UserRoutes from "./routes/UserRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import financeRoutes from "./routes/financeRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import feedbackRoutes from "./routes/FeedbackRoutes.js";
+import advertisementRoutes from "./routes/AdvertisementRoutes.js";
+import announcementRoutes from "./routes/AnnouncementRoutes.js";
 
 
 const app = express();
@@ -12,10 +15,6 @@ const app = express();
 //middleware
 app.use(express.json());
 
-app.use((req,res,next) => {
-   console.log(`req method is ${req.method} & Req URL is ${req.url}`);
-   next();
-});
 
 //bookings
 app.use("/api/Bookings", bookingRoutes);
@@ -25,6 +24,9 @@ app.use("/api/users",UserRoutes);
 app.use("/api/FinanceReport", financeRoutes);
 //Notifications
 app.use("/api/Notifications", notificationRoutes);
+app.use("/api/feedbacks", feedbackRoutes); 
+app.use("/api/advertisements", advertisementRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 const PORT = 8585
 
