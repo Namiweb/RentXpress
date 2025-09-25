@@ -3,7 +3,13 @@ import FinanceReport from "../models/financeModels.js";
 // Create a new finance report
 export const createFinanceReport = async (req, res) => {
   try {
-    const report = new FinanceReport(req.body);
+    const reportId = "RPT" + Date.now().toString().slice(-6);
+    const report = new FinanceReport({
+      ...req.body,
+      reportId,
+      generatedAt: new Date(),
+      updatedAt: new Date(),
+    });
     await report.save();
     res.status(201).json(report);
   } catch (error) {
@@ -37,8 +43,11 @@ export const updateFinanceReport = async (req, res) => {
   try {
     const report = await FinanceReport.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      {
+        ...req.body,
+        updatedAt: new Date(),
+      },
+      { new: true, runValidators: true }
     );
     if (!report) return res.status(404).json({ error: "Report not found" });
     res.status(200).json(report);

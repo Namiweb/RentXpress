@@ -1,10 +1,10 @@
-
 import mongoose from "mongoose";
 import express from "express";
 import dbconnection from "./config/dbconnection.js";
 import UserRoutes from "./routes/UserRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import financeRoutes from "./routes/financeRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 
 const app = express();
@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 app.use((req,res,next) => {
-   console.log('req method is ${req.method} & Req URL is ${req.url}');
+   console.log(`req method is ${req.method} & Req URL is ${req.url}`);
    next();
 });
 
@@ -22,8 +22,9 @@ app.use("/api/Bookings", bookingRoutes);
 //Users
 app.use("/api/users",UserRoutes);
 //Finance Reports
-app.use("/api/finance", financeRoutes);
-
+app.use("/api/FinanceReport", financeRoutes);
+//Notifications
+app.use("/api/Notifications", notificationRoutes);
 
 const PORT = 8585
 

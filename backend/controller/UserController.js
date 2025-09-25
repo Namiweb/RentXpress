@@ -26,24 +26,47 @@ export async function getUserById(req, res) {
 // Add user
 export async function createUser(req, res) {
   try {
-    const { email, password, role, firstName, lastName, phoneNumber } = req.body;
-    const newUser = new UserModels({ email, password, role, firstName, lastName, phoneNumber });
+    const {
+      email,
+      password,
+      role,
+      profile: { firstName, lastName, phoneNumber, dateOfBirth },
+    } = req.body;
+
+    // Generate a unique userId (you can modify this logic as needed)
+    const userId = "USR" + Date.now().toString().slice(-6); 
+
+    const newUser = new UserModels({
+      userId,
+      email,
+      password,
+      role,
+      profile: {
+        firstName,
+        lastName,
+        phoneNumber,
+        dateOfBirth: new Date(dateOfBirth),
+      },
+    });
+
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);
   } catch (error) {
     console.error("Error in createUser controller", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(400).json({
+      message: "User creation failed",
+      error: error.message,
+    });
   }
 }
 
 // update User
 export async function updateUser(req, res) {
   try {
-    const { email, password, role, firstName, lastName, phoneNumber } = req.body;
     const updatedUser = await UserModels.findByIdAndUpdate(
       req.params.id,
-      { email, password, role, firstName, lastName, phoneNumber },
-      { new: true }
+      { $set: req.body },
+      { new: true, runValidators: true }
     );
 
     if (!updatedUser) return res.status(404).json({ message: "User not found" });
@@ -51,7 +74,10 @@ export async function updateUser(req, res) {
     res.status(200).json({ message: "User updated successfully!", data: updatedUser });
   } catch (error) {
     console.error("Error in updateUser controller", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(400).json({
+      message: "User update failed",
+      error: error.message,
+    });
   }
 }
 
