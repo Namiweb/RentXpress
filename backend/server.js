@@ -8,6 +8,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import feedbackRoutes from "./routes/FeedbackRoutes.js";
 import advertisementRoutes from "./routes/AdvertisementRoutes.js";
 import announcementRoutes from "./routes/AnnouncementRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 
 const app = express();
@@ -27,6 +28,9 @@ app.use("/api/Notifications", notificationRoutes);
 app.use("/api/feedbacks", feedbackRoutes); 
 app.use("/api/advertisements", advertisementRoutes);
 app.use("/api/announcements", announcementRoutes);
+//Payments
+app.use("/api/Payment", paymentRoutes);
+
 
 const PORT = 8585
 
