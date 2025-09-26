@@ -8,9 +8,10 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import feedbackRoutes from "./routes/FeedbackRoutes.js";
 import advertisementRoutes from "./routes/AdvertisementRoutes.js";
 import announcementRoutes from "./routes/AnnouncementRoutes.js";
+import VehiclesRoutes from "./routes/VehiclesRoutes.js";
+import TripRoutes from "./routes/TripRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import paymentInspectionRoutes from "./routes/paymentInspectionRoutes.js";
-
 
 const app = express();
 
@@ -29,6 +30,9 @@ app.use("/api/Notifications", notificationRoutes);
 app.use("/api/feedbacks", feedbackRoutes); 
 app.use("/api/advertisements", advertisementRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/vehicles", VehiclesRoutes);
+app.use("/api/Trip", TripRoutes);
+
 //Payments
 app.use("/api/payments", paymentRoutes);
 //Payment Inspections
