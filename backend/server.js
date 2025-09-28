@@ -24,6 +24,8 @@ import multer from "multer";
  
 
  
+import invoiceRoutes from "./routes/InvoiceRoutes.js";
+// ✅ Driver routes
 // import vehicleRoutes from "./routes/VehicleRoutes.js"; // if needed later
 import driverApplicationRoutes from "./routes/DriverApplicationsRoutes.js";
 import driverEarningsRoutes from "./routes/DriverEarningsRoutes.js";
@@ -126,6 +128,13 @@ app.use("/api/vehicles", VehiclesRoutes);
 app.use("/api/Trip", TripRoutes); //Driver Applications
 app.use("/api/payments", paymentRoutes); //Payments
 app.use("/api/PaymentInspection", paymentInspectionRoutes); //Payment Inspections
+app.use("/api/Trip", TripRoutes);
+app.use("/api/invoice", invoiceRoutes);
+
+//Payments
+app.use("/api/payments", paymentRoutes);
+//Payment Inspections
+app.use("/api/PaymentInspection", paymentInspectionRoutes);
 
 // Driver Applications
 app.use("/api/driver-applications", driverApplicationRoutes);
@@ -151,6 +160,8 @@ app.use((error, req, res, next) => {
             errors,
         });
     }
+// Invoice Managment
+app.use("/api/invoices", invoiceRoutes);
 
     if (error.code === 11000) {
         const field = Object.keys(error.keyValue)[0];
