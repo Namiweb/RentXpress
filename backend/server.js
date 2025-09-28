@@ -8,7 +8,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import feedbackRoutes from "./routes/FeedbackRoutes.js";
 import advertisementRoutes from "./routes/AdvertisementRoutes.js";
 import announcementRoutes from "./routes/AnnouncementRoutes.js";
-
+import invoiceRoutes from "./routes/InvoiceRoutes.js";
 // ✅ Driver routes
 // import vehicleRoutes from "./routes/VehicleRoutes.js"; // if needed later
 import driverApplicationRoutes from "./routes/DriverApplicationsRoutes.js";
@@ -40,6 +40,7 @@ app.use("/api/advertisements", advertisementRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/vehicles", VehiclesRoutes);
 app.use("/api/Trip", TripRoutes);
+app.use("/api/invoice", invoiceRoutes);
 
 //Payments
 app.use("/api/payments", paymentRoutes);
@@ -58,6 +59,8 @@ app.use("/api/driver-payments", driverPaymentRoutes);
 // Driver Schedules
 app.use("/api/driver-schedules", driverScheduleRoutes);
 
+// Invoice Managment
+app.use("/api/invoices", invoiceRoutes);
 
 const PORT = 8585
 
