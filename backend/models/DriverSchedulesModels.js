@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
-const driverSchedulesSchema = new Schema({
+const driverPaymentSchema = new Schema({
   paymentId: { type: String, required: true, unique: true },
   driverId: { type: Schema.Types.ObjectId, ref: "Driver", required: true },
   tripId: { type: Schema.Types.ObjectId, ref: "Trip" },
@@ -22,7 +22,7 @@ const driverSchedulesSchema = new Schema({
 }, { timestamps: true });
 
 // ✅ Fix OverwriteModelError
-const DriverSchedules = mongoose.models.Driver_Schedules|| mongoose.model("Driver_Schedules", driverSchedulesSchema);
+const DriverPayments = mongoose.models.Driver_Payments || mongoose.model("Driver_Payments", driverPaymentSchema);
 
-export default DriverSchedules;
+export default DriverPayments;
 

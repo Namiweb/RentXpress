@@ -1,534 +1,453 @@
-import crypto from 'crypto';
-import User from '../models/UserModels.js';
-import { validateRegistrationData } from '../utils/validation.js';
-import { sendEmail } from '../utils/emailService.js';
-import { generateToken, generateRefreshToken, setTokenCookie, clearTokenCookies } from '../middleware/auth.js';
+import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
+import UserModels from "../models/UserModels.js";
+import DriverApplication from "../models/DriverApplicationsModels.js";
+import { hashPassword, verifyPassword } from "../utils/passwordUtils.js";
 
-// Register user (handles all user types)
-const register = async (req, res) => {
-    try {
-        console.log('Registration request body:', req.body); // Debug log
+const APPROVAL_REQUIRED_ROLES = new Set(["driver", "inspector"]);
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-        const { role = 'customer', ...userData } = req.body;
+function createSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-        // Ensure we have the required data
-        if (!userData || typeof userData !== 'object') {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request data'
-            });
-        }
+function generateUserId(role) {
+  const prefix = {
+    customer: "CUS",
+    vehicle_owner: "OWN",
+    driver: "DRV",
+    inspector: "INS",
+    admin: "ADM",
+  }[role] || "USR";
 
-        // Handle address field - ensure it's properly formatted
-        if (userData.address && typeof userData.address === 'string') {
-            try {
-                userData.address = JSON.parse(userData.address);
-            } catch (e) {
-                // If it's not JSON, keep it as string for non-vehicle_owner roles
-                if (role === 'vehicle_owner') {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Address must be an object with street and city for vehicle owners'
-                    });
-                }
-            }
-        }
+  return `${prefix}${Date.now().toString().slice(-6)}`;
+}
 
-        // Validate registration data based on role
-        const validation = validateRegistrationData(userData, role);
-        if (!validation.isValid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Validation failed',
-                errors: validation.errors
-            });
-        }
+function sanitizeUser(userDoc) {
+  const user = userDoc.toObject({ getters: true });
+  delete user.password;
+  delete user.__v;
+  return user;
+}
 
-        // Check if user already exists
-        const existingUser = await User.findByEmail(userData.email);
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'User with this email already exists'
-            });
-        }
+async function ensureUniqueEmail(email) {
+  const existing = await UserModels.findOne({ email });
+  if (existing) {
+    throw new Error("An account with this email already exists");
+  }
+}
 
-        // Check for duplicate NIC
-        const existingNIC = await User.findOne({ nicNumber: userData.nicNumber });
-        if (existingNIC) {
-            return res.status(400).json({
-                success: false,
-                message: 'User with this NIC number already exists'
-            });
-        }
+function determineStatus(role) {
+  return APPROVAL_REQUIRED_ROLES.has(role) ? "pending_verification" : "active";
+}
 
-        // For drivers, check duplicate license number
-        if (role === 'driver' && userData.drivingLicenseNumber) {
-            const existingLicense = await User.findOne({
-                drivingLicenseNumber: userData.drivingLicenseNumber
-            });
-            if (existingLicense) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Driver with this license number already exists'
-                });
-            }
-        }
+function normalizeDriverRegistrationInput(payload) {
+  const {
+    licenseInfo,
+    experience,
+    documents,
+    vehicleId,
+    licenseNumber,
+    licenseType,
+    issueDate,
+    expiryDate,
+    issuingAuthority,
+    yearsOfExperience,
+    previousEmployers,
+  } = payload;
 
-        // Create new user
-        const newUser = new User({
-            ...userData,
-            role
-        });
+  const normalizedLicenseInfo = {
+    licenseNumber: (licenseNumber || licenseInfo?.licenseNumber || "").trim() || undefined,
+    licenseType: (licenseType || licenseInfo?.licenseType || "").trim() || undefined,
+    issueDate: (issueDate || licenseInfo?.issueDate)
+      ? new Date(issueDate || licenseInfo?.issueDate)
+      : undefined,
+    expiryDate: (expiryDate || licenseInfo?.expiryDate)
+      ? new Date(expiryDate || licenseInfo?.expiryDate)
+      : undefined,
+    issuingAuthority: (issuingAuthority || licenseInfo?.issuingAuthority || "").trim() || undefined,
+  };
 
-        // Generate email verification token
-        const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-        newUser.emailVerificationToken = crypto
-            .createHash('sha256')
-            .update(emailVerificationToken)
-            .digest('hex');
-        newUser.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+  const normalizedExperience = experience || {
+    yearsOfExperience,
+    previousEmployers,
+  };
 
-        await newUser.save();
+  const experiencePayload = {
+    yearsOfExperience:
+      normalizedExperience?.yearsOfExperience != null
+        ? Number(normalizedExperience.yearsOfExperience)
+        : undefined,
+    previousEmployers: Array.isArray(normalizedExperience?.previousEmployers)
+      ? normalizedExperience.previousEmployers
+      : typeof normalizedExperience?.previousEmployers === "string"
+        ? normalizedExperience.previousEmployers
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : undefined,
+  };
 
-        // Send verification email (non-blocking)
-        try {
-            const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
-            await sendEmail({
-                to: newUser.email,
-                template: 'emailVerification',
-                data: {
-                    name: `${newUser.firstName} ${newUser.lastName}`,
-                    verificationUrl
-                }
-            });
-            console.log('Verification email sent successfully');
-        } catch (emailError) {
-            console.error('Email sending failed:', emailError);
-            // Don't fail registration if email fails
-        }
+  return {
+    licenseInfo: normalizedLicenseInfo,
+    experience: experiencePayload,
+    documents,
+    vehicleId: vehicleId || undefined,
+  };
+}
 
-        // Generate tokens
-        const token = generateToken(newUser._id);
-        const refreshToken = generateRefreshToken(newUser._id);
+async function createAccount(payload, role) {
+  const {
+    email,
+    password,
+    profile,
+    preferences,
+    notifications,
+    nicNumber,
+  } = payload;
 
-        // Set cookies
-        setTokenCookie(res, token, refreshToken);
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
 
-        res.status(201).json({
-            success: true,
-            message: 'Registration successful. Please check your email for verification.',
-            user: newUser.getPublicProfile(),
-            token
-        });
+  if (!profile) {
+    throw new Error("Profile information is required");
+  }
 
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Registration failed',
-            error: error.message
-        });
+  await ensureUniqueEmail(email);
+
+  const user = new UserModels({
+    userId: generateUserId(role),
+    nicNumber: nicNumber || undefined,
+    email,
+    password: hashPassword(password),
+    role,
+    profile: {
+      ...profile,
+      dateOfBirth: profile.dateOfBirth ? new Date(profile.dateOfBirth) : undefined,
+    },
+    status: determineStatus(role),
+    preferences,
+    notifications,
+  });
+
+  return user.save();
+}
+
+export async function registerCustomerOrOwner(req, res) {
+  try {
+    const { role } = req.body;
+    if (!role || !["customer", "vehicle_owner"].includes(role)) {
+      return res.status(400).json({ message: "Role must be customer or vehicle_owner" });
     }
-};
 
-// Login user
-const login = async (req, res) => {
-    try {
-        const { email, password, rememberMe = false } = req.body;
+    const createdUser = await createAccount(req.body, role);
 
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email and password are required'
-            });
-        }
+    res.status(201).json({
+      message: "Registration successful.",
+      user: sanitizeUser(createdUser),
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Registration failed" });
+  }
+}
 
-        const user = await User.findByEmail(email);
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email or password'
-            });
-        }
+export async function registerDriver(req, res) {
+  try {
+    const {
+      licenseInfo: normalizedLicenseInfo,
+      experience: experiencePayload,
+      documents: normalizedDocuments,
+      vehicleId: normalizedVehicleId,
+    } = normalizeDriverRegistrationInput(req.body);
 
-        if (!user.isActive) {
-            return res.status(400).json({
-                success: false,
-                message: 'Your account has been deactivated. Please contact support.'
-            });
-        }
+    if (!normalizedLicenseInfo.licenseNumber) {
+      return res.status(400).json({ message: "Driver license number is required" });
+    }
 
-        const isPasswordValid = await user.comparePassword(password);
-        if (!isPasswordValid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email or password'
-            });
-        }
+    const createdUser = await createAccount(req.body, "driver");
 
-        user.lastLogin = new Date();
+    await DriverApplication.create({
+      applicationId: `APP${Date.now().toString().slice(-6)}`,
+      email: createdUser.email,
+      driverId: createdUser._id,
+      vehicleId: normalizedVehicleId,
+      licenseInfo: normalizedLicenseInfo,
+      experience: experiencePayload,
+      documents: normalizedDocuments,
+      status: "under_review",
+      reviewComments: "Pending admin review",
+    });
+
+    res.status(201).json({
+      message: "Driver registration submitted. Please wait for admin approval.",
+      user: sanitizeUser(createdUser),
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error.message || "Driver registration failed",
+      details: error?.errors ?? undefined,
+    });
+  }
+}
+
+export async function registerInspector(req, res) {
+  try {
+    const createdUser = await createAccount(req.body, "inspector");
+
+    res.status(201).json({
+      message: "Inspector registration submitted. Please wait for admin approval.",
+      user: sanitizeUser(createdUser),
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Inspector registration failed" });
+  }
+}
+
+export async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    const user = await UserModels.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const passwordMatches = verifyPassword(password, user.password);
+    if (!passwordMatches) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    if (user.status !== "active") {
+      if (user.role === "vehicle_owner" || user.role === "customer") {
+        user.status = "active";
         await user.save();
-
-        const token = generateToken(user._id);
-        const refreshToken = generateRefreshToken(user._id);
-
-        setTokenCookie(res, token, refreshToken);
-
-        res.json({
-            success: true,
-            message: 'Login successful',
-            user: user.getPublicProfile(),
-            token
+      } else {
+        return res.status(403).json({
+          message: "Account pending approval",
+          status: user.status,
         });
-
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Login failed',
-            error: error.message
-        });
+      }
     }
-};
 
-// Logout user
-const logout = async (req, res) => {
-    try {
-        clearTokenCookies(res);
+    const token = createSessionToken();
 
-        res.json({
-            success: true,
-            message: 'Logout successful'
-        });
-    } catch (error) {
-        console.error('Logout error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Logout failed'
-        });
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Login failed", error: error.message });
+  }
+}
+
+export async function googleLogin(req, res) {
+  try {
+    if (!GOOGLE_CLIENT_ID || !googleClient) {
+      return res.status(500).json({ message: "Google authentication is not configured" });
     }
-};
 
-// Get user profile
-const getProfile = async (req, res) => {
-    try {
-        res.json({
-            success: true,
-            user: req.user.getPublicProfile()
-        });
-    } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get profile'
-        });
+    const { idToken, role } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: "Google ID token is required" });
     }
-};
 
-// Update user profile
-const updateProfile = async (req, res) => {
-    try {
-        const updates = req.body;
-        const userId = req.user._id;
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
 
-        delete updates.password;
-        delete updates.email;
-        delete updates.role;
-        delete updates.emailVerificationToken;
-        delete updates.passwordResetToken;
+    const payload = ticket.getPayload();
+    const email = payload?.email?.toLowerCase();
 
-        const user = await User.findByIdAndUpdate(
-            userId,
-            { $set: updates },
-            { new: true, runValidators: true }
-        );
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        res.json({
-            success: true,
-            message: 'Profile updated successfully',
-            user: user.getPublicProfile()
-        });
-
-    } catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to update profile',
-            error: error.message
-        });
+    if (!email) {
+      return res.status(400).json({ message: "Google account is missing an email address" });
     }
-};
 
-// Delete user account
-const deleteAccount = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { password } = req.body;
-
-        if (!password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password is required to delete account'
-            });
-        }
-
-        const user = await User.findById(userId);
-        const isPasswordValid = await user.comparePassword(password);
-
-        if (!isPasswordValid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid password'
-            });
-        }
-
-        await User.findByIdAndUpdate(userId, { isActive: false });
-
-        clearTokenCookies(res);
-
-        res.json({
-            success: true,
-            message: 'Account deleted successfully'
-        });
-
-    } catch (error) {
-        console.error('Delete account error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to delete account'
-        });
+    const user = await UserModels.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        message: "No RentXpress account is linked to this Google email",
+        email,
+      });
     }
-};
 
-// Forgot password
-const forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
+    const normalizedRole = typeof role === "string" ? role.trim() : undefined;
+    if (normalizedRole && user.role !== normalizedRole) {
+      return res.status(409).json({
+        message: `This Google account is registered as ${user.role.replace("_", " ")}.`,
+        expectedRole: user.role,
+        email,
+      });
+    }
 
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email is required'
-            });
-        }
-
-        const user = await User.findByEmail(email);
-        if (!user) {
-            return res.json({
-                success: true,
-                message: 'If the email exists, a password reset link has been sent'
-            });
-        }
-
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        user.passwordResetToken = crypto
-            .createHash('sha256')
-            .update(resetToken)
-            .digest('hex');
-        user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
-
+    if (user.status !== "active") {
+      if (user.role === "customer" || user.role === "vehicle_owner") {
+        user.status = "active";
         await user.save();
-
-        try {
-            const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-            await sendEmail({
-                to: user.email,
-                template: 'passwordReset',
-                data: {
-                    name: `${user.firstName} ${user.lastName}`,
-                    resetUrl,
-                    validFor: '10 minutes'
-                }
-            });
-
-            res.json({
-                success: true,
-                message: 'Password reset link has been sent to your email'
-            });
-
-        } catch (emailError) {
-            console.error('Password reset email failed:', emailError);
-            user.passwordResetToken = undefined;
-            user.passwordResetExpires = undefined;
-            await user.save();
-
-            res.status(500).json({
-                success: false,
-                message: 'Failed to send password reset email'
-            });
-        }
-
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to process forgot password request'
+      } else {
+        return res.status(403).json({
+          message: "Account pending approval",
+          status: user.status,
+          email,
         });
+      }
     }
-};
 
-// Reset password
-const resetPassword = async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
+    const token = createSessionToken();
 
-        if (!token || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Token and new password are required'
-            });
-        }
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error("Google login failed", error);
+    res.status(401).json({ message: "Google authentication failed" });
+  }
+}
 
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password must be at least 6 characters long'
-            });
-        }
-
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        const user = await User.findOne({
-            passwordResetToken: hashedToken,
-            passwordResetExpires: { $gt: Date.now() }
-        });
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired password reset token'
-            });
-        }
-
-        user.password = newPassword;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        await user.save();
-
-        clearTokenCookies(res);
-
-        res.json({
-            success: true,
-            message: 'Password reset successful. Please login with your new password.'
-        });
-
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to reset password'
-        });
+export async function registerWithGoogle(req, res) {
+  try {
+    if (!GOOGLE_CLIENT_ID || !googleClient) {
+      return res.status(500).json({ message: "Google authentication is not configured" });
     }
-};
 
-// Verify email
-const verifyEmail = async (req, res) => {
-    try {
-        const { token } = req.params;
-
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        const user = await User.findOne({
-            emailVerificationToken: hashedToken,
-            emailVerificationExpires: { $gt: Date.now() }
-        });
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired email verification token'
-            });
-        }
-
-        user.isEmailVerified = true;
-        user.emailVerificationToken = undefined;
-        user.emailVerificationExpires = undefined;
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Email verified successfully'
-        });
-
-    } catch (error) {
-        console.error('Email verification error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Email verification failed'
-        });
+    const { idToken, role, profile, ...rest } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: "Google ID token is required" });
     }
-};
 
-// Change password (when user is logged in)
-const changePassword = async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const userId = req.user._id;
-
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Current password and new password are required'
-            });
-        }
-
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'New password must be at least 6 characters long'
-            });
-        }
-
-        const user = await User.findById(userId);
-        const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-
-        if (!isCurrentPasswordValid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Current password is incorrect'
-            });
-        }
-
-        user.password = newPassword;
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Password changed successfully'
-        });
-
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to change password'
-        });
+    const normalizedRole = typeof role === "string" ? role.trim() : "";
+    if (!normalizedRole || !["customer", "vehicle_owner", "driver", "inspector"].includes(normalizedRole)) {
+      return res.status(400).json({ message: "A valid role is required" });
     }
-};
 
-export {
-    register,
-    login,
-    logout,
-    getProfile,
-    updateProfile,
-    deleteAccount,
-    forgotPassword,
-    resetPassword,
-    verifyEmail,
-    changePassword
-};
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload?.email?.toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ message: "Google account is missing an email address" });
+    }
+
+    if (payload?.email_verified === false) {
+      return res.status(400).json({ message: "Google account email is not verified" });
+    }
+
+    const existing = await UserModels.findOne({ email });
+    if (existing) {
+      return res.status(409).json({
+        message: "An account with this Google email already exists",
+        role: existing.role,
+        email,
+      });
+    }
+
+    const randomPassword = crypto.randomBytes(32).toString("hex");
+
+    const mergedProfile = {
+      ...(profile || {}),
+    };
+
+    const fullName = payload?.name || "";
+    if (!mergedProfile.firstName) {
+      mergedProfile.firstName = payload?.given_name || fullName.split(" ")[0] || "";
+    }
+    if (!mergedProfile.lastName) {
+      const familyName = payload?.family_name;
+      if (familyName) {
+        mergedProfile.lastName = familyName;
+      } else if (fullName.includes(" ")) {
+        mergedProfile.lastName = fullName.split(" ").slice(1).join(" ");
+      }
+    }
+    if (!mergedProfile.profileImage && payload?.picture) {
+      mergedProfile.profileImage = payload.picture;
+    }
+
+    const accountPayload = {
+      ...rest,
+      role: normalizedRole,
+      email,
+      password: randomPassword,
+      profile: mergedProfile,
+    };
+
+    let createdUser;
+    let responseMessage = "Registration successful.";
+
+    if (normalizedRole === "driver") {
+      const {
+        licenseInfo: normalizedLicenseInfo,
+        experience: experiencePayload,
+        documents: normalizedDocuments,
+        vehicleId: normalizedVehicleId,
+      } = normalizeDriverRegistrationInput(accountPayload);
+
+      if (!normalizedLicenseInfo.licenseNumber) {
+        return res.status(400).json({ message: "Driver license number is required" });
+      }
+
+      createdUser = await createAccount(accountPayload, "driver");
+
+      await DriverApplication.create({
+        applicationId: `APP${Date.now().toString().slice(-6)}`,
+        email: createdUser.email,
+        driverId: createdUser._id,
+        vehicleId: normalizedVehicleId,
+        licenseInfo: normalizedLicenseInfo,
+        experience: experiencePayload,
+        documents: normalizedDocuments,
+        status: "under_review",
+        reviewComments: "Pending admin review",
+      });
+
+      responseMessage = "Driver registration submitted. Please wait for admin approval.";
+    } else if (normalizedRole === "inspector") {
+      createdUser = await createAccount(accountPayload, "inspector");
+      responseMessage = "Inspector registration submitted. Please wait for admin approval.";
+    } else {
+      createdUser = await createAccount(accountPayload, normalizedRole);
+    }
+
+    res.status(201).json({
+      message: responseMessage,
+      user: sanitizeUser(createdUser),
+    });
+  } catch (error) {
+    console.error("Google registration failed", error);
+    const status =
+      error?.name === "ValidationError" || error?.message?.toLowerCase().includes("required")
+        ? 400
+        : 500;
+    res.status(status).json({ message: error.message || "Google registration failed" });
+  }
+}
+
+export async function getApprovalStatus(req, res) {
+  try {
+    const { email } = req.params;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await UserModels.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ status: user.status, role: user.role });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch approval status" });
+  }
+}

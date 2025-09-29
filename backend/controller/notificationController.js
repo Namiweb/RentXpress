@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Notification from "../models/notificationModels.js";
 
 // Create notification
@@ -18,7 +19,25 @@ export async function createNotification(req, res) {
 // Get all notifications
 export async function getAllNotifications(req, res) {
   try {
-    const notifications = await Notification.find().sort({ createdAt: -1 });
+    const { userId, type, status } = req.query;
+    const filter = {};
+
+    if (userId) {
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: "Invalid userId" });
+      }
+      filter.userId = userId;
+    }
+
+    if (type) {
+      filter.type = type;
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    const notifications = await Notification.find(filter).sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });

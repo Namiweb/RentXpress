@@ -1,9 +1,26 @@
 import UserModels from "../models/UserModels.js";
+import { hashPassword } from "../utils/passwordUtils.js";
+
+function sanitizeUser(userDoc) {
+  if (!userDoc) return null;
+  const user = userDoc.toObject({ getters: true });
+  delete user.password;
+  delete user.__v;
+  return user;
+}
 
 // Get all users
 export async function getAllUsers(req, res) {
   try {
-    const users = await UserModels.find();
+    const query = {};
+    if (req.query.status) {
+      query.status = req.query.status;
+    }
+    if (req.query.role) {
+      query.role = req.query.role;
+    }
+
+    const users = await UserModels.find(query).select("-password");
     res.status(200).json(users);
   } catch (error) {
     console.error("Error in getAllUsers controller", error);
@@ -14,7 +31,7 @@ export async function getAllUsers(req, res) {
 // Get one user
 export async function getUserById(req, res) {
   try {
-    const user = await UserModels.findById(req.params.id);
+    const user = await UserModels.findById(req.params.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found!" });
     res.json(user);
   } catch (error) {
@@ -26,31 +43,27 @@ export async function getUserById(req, res) {
 // Add user
 export async function createUser(req, res) {
   try {
-    const {
-      email,
-      password,
-      role,
-      profile: { firstName, lastName, phoneNumber, dateOfBirth },
-    } = req.body;
+    const { email, password, role, profile } = req.body;
 
-    // Generate a unique userId (you can modify this logic as needed)
-    const userId = "USR" + Date.now().toString().slice(-6); 
+    if (!email || !password || !role || !profile) {
+      return res.status(400).json({ message: "Email, password, role and profile are required" });
+    }
+
+    const userId = "USR" + Date.now().toString().slice(-6);
 
     const newUser = new UserModels({
       userId,
       email,
-      password,
+      password: password.startsWith("$2") ? password : hashPassword(password),
       role,
       profile: {
-        firstName,
-        lastName,
-        phoneNumber,
-        dateOfBirth: new Date(dateOfBirth),
+        ...profile,
+        dateOfBirth: profile.dateOfBirth ? new Date(profile.dateOfBirth) : undefined,
       },
     });
 
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    res.status(201).json(sanitizeUser(savedUser));
   } catch (error) {
     console.error("Error in createUser controller", error);
     res.status(400).json({
@@ -63,11 +76,25 @@ export async function createUser(req, res) {
 // update User
 export async function updateUser(req, res) {
   try {
+    const updatePayload = { ...req.body };
+    if (updatePayload.password) {
+      updatePayload.password = updatePayload.password.startsWith("$2")
+        ? updatePayload.password
+        : hashPassword(updatePayload.password);
+    }
+
+    if (updatePayload.profile?.dateOfBirth) {
+      updatePayload.profile = {
+        ...updatePayload.profile,
+        dateOfBirth: new Date(updatePayload.profile.dateOfBirth),
+      };
+    }
+
     const updatedUser = await UserModels.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updatePayload },
       { new: true, runValidators: true }
-    );
+    ).select("-password");
 
     if (!updatedUser) return res.status(404).json({ message: "User not found" });
 

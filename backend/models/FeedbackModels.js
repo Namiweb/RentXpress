@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
   feedbackId: { type: String, required: true, unique: true, trim: true },
-  bookingId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "Booking" },
+  bookingId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "Bookings" },
   customerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
   ratings: {
     vehicleRating: { type: Number, min: 1, max: 5 },
