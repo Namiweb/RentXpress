@@ -130,7 +130,14 @@ function VehicleExplorer({
           {vehicles.map((vehicle) => {
             const canBook =
               vehicle.status === "approved" && vehicle.availability?.isAvailable !== false;
-            const image = vehicle.images?.[0] || vehicle.media?.[0]?.url;
+           const image =
+  vehicle.imageUrl ||
+  (vehicle.images?.[0]?.data &&
+    `data:${vehicle.images[0].contentType};base64,${vehicle.images[0].data}`) ||
+  vehicle.media?.[0]?.url ||
+  null;
+
+
             const seatsLabel = vehicle.details?.seatingCapacity
               ? `${vehicle.details.seatingCapacity} seats`
               : null;
@@ -140,11 +147,19 @@ function VehicleExplorer({
             return (
               <article key={vehicle._id} className="vehicle-card">
                 <div className="vehicle-card__media">
-                  {image ? (
-                    <img src={image} alt={`${vehicle.basicInfo?.make || "Vehicle"} ${vehicle.basicInfo?.model || ""}`} />
-                  ) : (
-                    <div className="vehicle-card__media--placeholder" aria-hidden="true" />
-                  )}
+                 {image ? (
+  <img
+    src={image}
+    alt={`${vehicle.basicInfo?.make || "Vehicle"} ${vehicle.basicInfo?.model || ""}`}
+    className="vehicle-card__image"
+    loading="lazy"
+  />
+) : (
+  <div className="vehicle-card__media--placeholder" aria-hidden="true">
+    <span>No image</span>
+  </div>
+)}
+
                   <span className="vehicle-card__price-pill">
                     {formatCurrency(vehicle.pricing?.dailyRate)} / day
                   </span>
