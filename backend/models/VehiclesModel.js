@@ -22,13 +22,21 @@ const vehicleSchema = new mongoose.Schema({
     engineNumber: { type: String, trim: true },
   },
   details: {
-    category: { type: String, enum: ['SUV', 'Sedan', 'Van', 'Truck', 'Other', 'motorcycle'], default: 'Other' },
-    fuelType: { type: String, enum: ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'petrol'], required: true },
-    transmission: { type: String, enum: ['Manual', 'Automatic', 'manual'], required: true },
+    category: {
+      type: String,
+      enum: ['SUV', 'Sedan', 'Van', 'Truck', 'Other', 'Motorcycle', 'car', 'Car', 'suv', 'van', 'truck', 'motorcycle'],
+      default: 'Other'
+    },
+    fuelType: { type: String, enum: ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'petrol', 'diesel', 'electric', 'hybrid'], required: true },
+    transmission: { type: String, enum: ['Manual', 'Automatic', 'manual', 'automatic'], required: true },
     seatingCapacity: { type: Number, min: 1, max: 50 },
     mileage: { type: Number, min: 0 },
     features: [String],
-    condition: { type: String, enum: ['Excellent', 'Good', 'Fair', 'Poor', 'excellent'], required: true },
+    condition: {
+      type: String,
+      enum: ['Excellent', 'Good', 'Fair', 'Poor', 'excellent', 'good', 'fair', 'poor'],
+      required: true,
+    },
     description: String,
   },
   pricing: {
@@ -57,11 +65,34 @@ const vehicleSchema = new mongoose.Schema({
     minimumBookingDays: { type: Number, default: 1, min: 1 },
     maximumBookingDays: { type: Number }
   },
-  images: [String],
+  inspectionStatus: {
+    type: String,
+    enum: ['not_required', 'pending', 'assigned', 'in_progress', 'available', 'needs_maintenance'],
+    default: 'pending'
+  },
+  lastInspection: {
+    inspectionId: { type: String, trim: true },
+    inspectedAt: Date,
+    decision: {
+      type: String,
+      enum: ['pending', 'available', 'needs_maintenance'],
+      default: 'pending'
+    },
+    inspector: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'users'
+    },
+    notes: { type: String, trim: true },
+    issues: { type: String, trim: true }
+  },
+  images: {
+    type: [mongoose.Schema.Types.Mixed],
+    default: [],
+  },
   documents: {
     registration: String,
     insurance: String,
-    inspection: String
+    inspection: String,
   },
   rating: {
     average: { type: Number, default: 0 },

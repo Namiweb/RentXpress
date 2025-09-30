@@ -6,8 +6,8 @@ const driverApplicationSchema = new Schema(
     applicationId: { type: String, required: true, unique: true },
     email: { type: String, required: true },
 
-    driverId: { type: String },   // simple string instead of ref User
-    vehicleId: { type: String },  // simple string instead of ref Vehicle
+    driverId: { type: Schema.Types.ObjectId, ref: "users" },
+    vehicleId: { type: Schema.Types.ObjectId, ref: "vehicles" },
 
     licenseInfo: {
       licenseNumber: { type: String, required: true },
