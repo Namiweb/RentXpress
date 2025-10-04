@@ -1279,6 +1279,59 @@ function DriverRequests({
   onAccept,
   acceptingId,
 }) {
+  // Filter requests to only show upcoming trips (not past dates)
+  const upcomingRequests = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0); // Start of today (00:00:00)
+
+    return requests.filter((request) => {
+      const scheduledAt = getBookingScheduledDateTime(request);
+      if (!scheduledAt) {
+        // If no scheduled date, consider it as future (pending scheduling)
+        return true;
+      }
+      // Only show requests scheduled for today or future dates
+      return scheduledAt >= todayStart;
+    });
+  }, [requests]);
+
+  // Check if a request has expired (more than 2 hours past scheduled time)
+  const isRequestExpired = (request) => {
+    const scheduledAt = getBookingScheduledDateTime(request);
+    if (!scheduledAt) return false;
+
+    const now = new Date();
+    // Consider a request expired if it's more than 2 hours past the scheduled time
+    const expiryTime = new Date(scheduledAt.getTime() + (2 * 60 * 60 * 1000));
+    return now > expiryTime;
+  };
+
+  // MAIN BUSINESS LOGIC: Drivers can only accept requests scheduled for TODAY
+  // This prevents drivers from accepting future trips in advance
+  const canAcceptRequest = (request) => {
+    const scheduledAt = getBookingScheduledDateTime(request);
+
+    // Allow acceptance if no scheduled date (pending scheduling)
+    if (!scheduledAt) {
+      return true;
+    }
+
+    const now = new Date();
+
+    // Define TODAY boundaries (00:00:00 to 23:59:59)
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0); // Start of today (00:00:00)
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow (00:00:00)
+
+    // RULE: Only allow acceptance if scheduled for TODAY
+    // scheduledAt >= today (not before today)
+    // scheduledAt < tomorrow (not tomorrow or later)
+    return scheduledAt >= today && scheduledAt < tomorrow;
+  };
+
   return (
     <section className="driver-panel">
       <header className="panel-header">
@@ -1289,13 +1342,26 @@ function DriverRequests({
       </header>
       {error && <p className="error-text">{error}</p>}
       {isLoading && <p>Loading requests...</p>}
-      {!isLoading && requests.length === 0 && <p>No driver requests available right now.</p>}
-      {!isLoading && requests.length > 0 && (
+      {!isLoading && upcomingRequests.length === 0 && requests.length > 0 && (
+        <p>No upcoming requests available. All requests are for past dates.</p>
+      )}
+      {!isLoading && upcomingRequests.length === 0 && requests.length === 0 && (
+        <p>No driver requests available right now.</p>
+      )}
+      {!isLoading && upcomingRequests.length > 0 && (
         <ul className="list">
-          {requests.map((request) => {
+          {upcomingRequests.map((request) => {
             const scheduledAt = getBookingScheduledDateTime(request);
             const driverFee = Number(request.pricing?.driverFee || 0);
             const estimatedKm = driverFee > 0 ? driverFee / 500 : null;
+
+            // Check various states for this request
+            const isExpired = isRequestExpired(request);
+            const canAccept = canAcceptRequest(request); // TODAY-ONLY RULE
+            const now = new Date();
+            const isToday = scheduledAt && isSameDay(scheduledAt, now);
+            const isUpcoming = scheduledAt && scheduledAt > now;
+
             return (
               <li key={`request-${request._id}`} className="list-item">
                 <div>
@@ -1305,6 +1371,12 @@ function DriverRequests({
                   </p>
                   <p style={{ margin: "0 0 0.25rem" }}>
                     Scheduled {formatDateTime(scheduledAt) || "Pending"}
+                    {/* Visual indicators for request timing */}
+                    {isToday && <span style={{ color: "#f59e0b", marginLeft: "0.5rem" }}>(Today)</span>}
+                    {isUpcoming && !isToday && <span style={{ color: "#10b981", marginLeft: "0.5rem" }}>(Upcoming)</span>}
+                    {isExpired && <span style={{ color: "#ef4444", marginLeft: "0.5rem" }}>(Expired)</span>}
+                    {/* Show when request is not available for acceptance today */}
+                    {!canAccept && !isExpired && !isToday && <span style={{ color: "#6b7280", marginLeft: "0.5rem" }}>(Not available today)</span>}
                   </p>
                   <div
                     style={{
@@ -1322,14 +1394,39 @@ function DriverRequests({
                     {estimatedKm && (
                       <span className="tag">Approx {estimatedKm.toFixed(1)} km</span>
                     )}
+                    {scheduledAt && (
+                      <span className="tag">
+                        {isToday ? "Today" : scheduledAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
                 </div>
+                {/* 
+                  Accept button logic:
+                  - Disabled if request is expired (past + 2 hours)
+                  - Disabled if request is not scheduled for today (!canAccept)
+                  - Shows appropriate button text and tooltip
+                */}
                 <button
                   className="btn"
                   onClick={() => onAccept(request._id)}
-                  disabled={acceptingId === request._id}
+                  disabled={acceptingId === request._id || isExpired || !canAccept}
+                  title={
+                    isExpired
+                      ? "This request has expired"
+                      : !canAccept
+                        ? "Can only accept requests scheduled for today"
+                        : undefined
+                  }
                 >
-                  {acceptingId === request._id ? "Accepting..." : "Accept"}
+                  {acceptingId === request._id
+                    ? "Accepting..."
+                    : isExpired
+                      ? "Expired"
+                      : !canAccept
+                        ? "Not Today" // Clear indication this is not available today
+                        : "Accept"
+                  }
                 </button>
               </li>
             );
@@ -1448,7 +1545,24 @@ function DriverDashboard() {
       if (!response.ok) {
         throw new Error(data.message || "Unable to load driver requests");
       }
-      setAvailableRequests(Array.isArray(data) ? data : []);
+
+      // FILTER 1: Remove requests that are scheduled for past dates
+      // This happens at the data loading level to reduce unnecessary data
+      const now = new Date();
+      const filteredRequests = (Array.isArray(data) ? data : []).filter((request) => {
+        const scheduledAt = getBookingScheduledDateTime(request);
+        if (!scheduledAt) {
+          // Include requests without scheduled time (pending scheduling)
+          return true;
+        }
+
+        // Only include requests scheduled for today or future
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        return scheduledAt >= todayStart;
+      });
+
+      setAvailableRequests(filteredRequests);
     } catch (error) {
       setRequestsError(error.message);
       setAvailableRequests([]);
@@ -1459,6 +1573,46 @@ function DriverDashboard() {
 
   const acceptBookingRequest = async (bookingId) => {
     if (!bookingId || !user?._id) return;
+
+    // VALIDATION: Server-side check before accepting the request
+    // Find the request to validate its scheduled date
+    const request = availableRequests.find(req => req._id === bookingId);
+    if (request) {
+      const scheduledAt = getBookingScheduledDateTime(request);
+      if (scheduledAt) {
+        const now = new Date();
+
+        // Define TODAY boundaries for validation
+        const today = new Date(now);
+        today.setHours(0, 0, 0, 0); // Start of today
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow
+
+        // VALIDATION 1: Check if request is for a past date
+        if (scheduledAt < today) {
+          alert("Cannot accept requests for past dates. Please refresh the list.");
+          await loadAvailableRequests(); // Refresh to remove expired requests
+          return;
+        }
+
+        // VALIDATION 2: MAIN BUSINESS RULE - Only allow TODAY's requests
+        if (scheduledAt >= tomorrow) {
+          alert("Can only accept requests scheduled for today. Please wait until the trip date.");
+          return;
+        }
+
+        // VALIDATION 3: Check if request has expired (2+ hours past scheduled time)
+        const expiryTime = new Date(scheduledAt.getTime() + (2 * 60 * 60 * 1000));
+        if (now > expiryTime) {
+          alert("This request has expired and can no longer be accepted.");
+          await loadAvailableRequests(); // Refresh to remove expired requests
+          return;
+        }
+      }
+    }
+
+    // If all validations pass, proceed with acceptance
     setAcceptingBookingId(bookingId);
     try {
       const response = await apiRequest(`/Bookings/${bookingId}/accept`, {
@@ -1572,8 +1726,19 @@ function DriverDashboard() {
       }
     });
 
+    // METRICS: Only count upcoming requests (not past ones)
+    // Apply the same TODAY-ONLY filter to metrics
+    const upcomingRequests = availableRequests.filter((request) => {
+      const scheduledAt = getBookingScheduledDateTime(request);
+      if (!scheduledAt) return true; // Include unscheduled
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      return scheduledAt >= todayStart;
+    });
+
     return [
-      { label: "Requests", value: availableRequests.length.toLocaleString() },
+      { label: "Requests", value: upcomingRequests.length.toLocaleString() },
       { label: "Upcoming", value: upcoming.toLocaleString() },
       { label: "Completed", value: completed.toLocaleString() },
     ];
@@ -1598,11 +1763,21 @@ function DriverDashboard() {
       }
     });
 
+    // OVERVIEW CARDS: Only count upcoming requests with same TODAY filter
+    const upcomingRequests = availableRequests.filter((request) => {
+      const scheduledAt = getBookingScheduledDateTime(request);
+      if (!scheduledAt) return true;
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      return scheduledAt >= todayStart;
+    });
+
     return [
       {
         title: "Available requests",
-        value: availableRequests.length.toLocaleString(),
-        hint: "Ready to accept",
+        value: upcomingRequests.length.toLocaleString(),
+        hint: "Ready to accept (upcoming only)", // Updated hint to clarify filtering
       },
       {
         title: "Active jobs",
