@@ -10,6 +10,8 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import feedbackRoutes from "./routes/FeedbackRoutes.js";
 import advertisementRoutes from "./routes/AdvertisementRoutes.js";
 import announcementRoutes from "./routes/AnnouncementRoutes.js";
+import financialRoutes from "./routes/financialRoutes.js";
+
 
 // ✅ Driver routes
 // import vehicleRoutes from "./routes/VehicleRoutes.js"; // if needed later
@@ -24,6 +26,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import paymentInspectionRoutes from "./routes/paymentInspectionRoutes.js";
 import vehicleInspectionRoutes from "./routes/VehicleInspectionRoutes.js";
 import { ensureDefaultAdmin } from "./utils/ensureDefaultAdmin.js";
+import { startMonthlyJob } from "./cron/monthlySalary.js";
 
 const app = express();
 
@@ -56,6 +59,8 @@ app.use("/api/Bookings", bookingRoutes);
 app.use("/api/users",UserRoutes);
 //Finance Reports
 app.use("/api/FinanceReport", financeRoutes);
+app.use("/api/Financial", financialRoutes);
+app.use("/api/SalaryConfig", financialRoutes);
 //Notifications
 app.use("/api/Notifications", notificationRoutes);
 app.use("/api/feedbacks", feedbackRoutes); 
@@ -91,4 +96,5 @@ app.listen(PORT, async () => {
     await dbconnection();
     await ensureDefaultAdmin();
     console.log("MY SERVER IS RUNNING ON http://localhost:"+PORT)
+    startMonthlyJob();
 })

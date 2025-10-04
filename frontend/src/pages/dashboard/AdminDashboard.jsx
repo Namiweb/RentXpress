@@ -4,11 +4,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { apiRequest } from "../../services/api.js";
+import FinancialManagementPanel from "../../Components/FinancialManagementPanel";
 
 const USER_ROLES = ["customer", "driver", "vehicle_owner", "inspector", "admin"];
 const USER_STATUSES = ["pending_verification", "active", "inactive", "suspended"];
 const VEHICLE_STATUSES = ["pending", "approved", "rejected"];
-const BOOKING_STATUSES = ["pending", "confirmed", "started", "in_progress", "completed", "cancelled"];
+const BOOKING_STATUSES = ["pending", "completed", "cancelled"];
 const PAYMENT_STATUSES = ["pending", "completed", "failed", "refunded"];
 const PAYOUT_STATUSES = ["pending", "processing", "completed", "failed"];
 const DEFAULT_CURRENCY = "LKR";
@@ -74,6 +75,13 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString();
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString();
 }
 
 function normalizeStatus(value) {
@@ -143,7 +151,7 @@ function OverviewSection({ metrics, currency, onRefresh, isLoading }) {
         <OverviewCard
           label="Total Earnings"
           value={formatCurrency(metrics.earnings, currency)}
-          helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
+          // helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
           loading={isLoading}
           variant="accent"
         />
@@ -151,6 +159,469 @@ function OverviewSection({ metrics, currency, onRefresh, isLoading }) {
     </section>
   );
 }
+
+// Enhanced Announcement Management Component
+function AnnouncementManagementPanel({ adminId }) {
+  const [announcements, setAnnouncements] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch announcements
+  const fetchAnnouncements = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await apiRequest("/announcements");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to fetch announcements");
+      setAnnouncements(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
+
+  // Delete announcement
+  const handleDelete = async (announcementId) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?")) return;
+    
+    setError("");
+    try {
+      const response = await apiRequest(`/announcements/${announcementId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to delete announcement");
+      }
+      await fetchAnnouncements();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Open edit form
+  const handleEdit = (announcement) => {
+    setEditingAnnouncement(announcement);
+    setShowForm(true);
+  };
+
+  // Close form
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingAnnouncement(null);
+  };
+
+  // Handle form submission (create/update)
+  const handleSubmit = async (formData) => {
+    setError("");
+    setIsSubmitting(true);
+    try {
+      let response;
+      if (editingAnnouncement) {
+        // Update existing announcement
+        response = await apiRequest(`/announcements/${editingAnnouncement._id}`, {
+          method: "PUT",
+          body: JSON.stringify(formData),
+        });
+      } else {
+        // Create new announcement
+        response = await apiRequest("/announcements", {
+          method: "POST",
+          body: JSON.stringify({
+            announcementId: `ANN${Date.now().toString().slice(-6)}`,
+            createdBy: adminId,
+            ...formData,
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || `Failed to ${editingAnnouncement ? 'update' : 'create'} announcement`);
+      }
+
+      await fetchAnnouncements();
+      handleCloseForm();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Update announcement status
+  const handleStatusUpdate = async (announcementId, newStatus) => {
+    setError("");
+    try {
+      const response = await apiRequest(`/announcements/${announcementId}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to update status");
+      }
+      await fetchAnnouncements();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <section className="panel">
+      <header className="panel-header">
+        <div>
+          <h3>Announcement Management</h3>
+          <p className="panel-subtitle">Create and manage platform announcements</p>
+        </div>
+        <button className="btn" type="button" onClick={() => setShowForm(true)}>
+          Create Announcement
+        </button>
+      </header>
+
+      {error && <p className="error-text">{error}</p>}
+
+      {isLoading ? (
+        <p>Loading announcements...</p>
+      ) : announcements.length === 0 ? (
+        <p>No announcements found. Create your first announcement!</p>
+      ) : (
+        <div className="table-wrapper">
+          <table className="management-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Target Audience</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {announcements.map((announcement) => (
+                <tr key={announcement._id}>
+                  <td>
+                    <div className="cell-stack">
+                      <strong>{announcement.title}</strong>
+                      <span className="muted">{announcement.content.substring(0, 100)}...</span>
+                    </div>
+                  </td>
+                  <td>
+                    <StatusPill value={announcement.status} />
+                  </td>
+                  <td>
+                    <span className={`priority-pill priority-${announcement.priority}`}>
+                      {announcement.priority}
+                    </span>
+                  </td>
+                  <td>
+                    {announcement.targetAudience?.length > 0 
+                      ? announcement.targetAudience.join(", ") 
+                      : "All users"}
+                  </td>
+                  <td>{formatDate(announcement.createdAt)}</td>
+                  <td>
+                    <div className="row-actions">
+                      <select
+                        className="input-control"
+                        value={announcement.status}
+                        onChange={(e) => handleStatusUpdate(announcement._id, e.target.value)}
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                      </select>
+                      <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => handleEdit(announcement)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={() => handleDelete(announcement._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showForm && (
+        <AnnouncementForm
+          announcement={editingAnnouncement}
+          onClose={handleCloseForm}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
+      )}
+    </section>
+  );
+}
+
+// Enhanced Announcement Form Component
+function AnnouncementForm({ announcement, onClose, onSubmit, isSubmitting }) {
+  const [formData, setFormData] = useState({
+    title: announcement?.title || "",
+    content: announcement?.content || "",
+    status: announcement?.status || "draft",
+    targetAudience: announcement?.targetAudience || [],
+    priority: announcement?.priority || "low",
+    expiryDate: announcement?.expiryDate ? new Date(announcement.expiryDate).toISOString().split('T')[0] : ""
+  });
+
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    
+    if (type === "checkbox") {
+      setFormData(prev => ({
+        ...prev,
+        targetAudience: checked 
+          ? [...prev.targetAudience, value]
+          : prev.targetAudience.filter(item => item !== value)
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    
+    // Prepare payload
+    const payload = {
+      title: formData.title,
+      content: formData.content,
+      status: formData.status,
+      targetAudience: formData.targetAudience,
+      priority: formData.priority,
+    };
+
+    // Add expiry date if provided
+    if (formData.expiryDate) {
+      payload.expiryDate = new Date(formData.expiryDate);
+    }
+
+    // Add publishedAt if status is being changed to published
+    if (formData.status === "published" && (!announcement || announcement.status !== "published")) {
+      payload.publishedAt = new Date();
+    }
+
+    onSubmit(payload);
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <form className="modal" onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
+        <header className="modal-header">
+          <div>
+            <h3>{announcement ? "Edit Announcement" : "Create Announcement"}</h3>
+            <p className="panel-subtitle">
+              {announcement ? "Update announcement details" : "Create a new platform announcement"}
+            </p>
+          </div>
+          <button className="close-button" type="button" onClick={onClose}>
+            ×
+          </button>
+        </header>
+        
+        <div className="modal-body">
+          <div className="form-grid">
+            <label>
+              Title
+              <input
+                className="input-control"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            
+            <label>
+              Status
+              <select
+                className="input-control"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </label>
+            
+            <label>
+              Priority
+              <select
+                className="input-control"
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            
+            <label>
+              Expiry Date
+              <input
+                className="input-control"
+                type="date"
+                name="expiryDate"
+                value={formData.expiryDate}
+                onChange={handleChange}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </label>
+          </div>
+
+          <label>
+            Content
+            <textarea
+              className="input-control"
+              name="content"
+              rows={4}
+              value={formData.content}
+              onChange={handleChange}
+              required
+            />
+          </label>
+
+          <div className="checkbox-group">
+            <label className="checkbox-group-label">Target Audience</label>
+            <div className="checkbox-grid">
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  value="customer"
+                  checked={formData.targetAudience.includes("customer")}
+                  onChange={handleChange}
+                />
+                Customers
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  value="vehicle_owner"
+                  checked={formData.targetAudience.includes("vehicle_owner")}
+                  onChange={handleChange}
+                />
+                Vehicle Owners
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  value="admin"
+                  checked={formData.targetAudience.includes("admin")}
+                  onChange={handleChange}
+                />
+                Admins
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <footer className="modal-footer">
+          <button className="btn btn-secondary" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : announcement ? "Update Announcement" : "Create Announcement"}
+          </button>
+        </footer>
+      </form>
+    </div>
+  );
+}
+
+function AdvertisementForm({ adminId, onCreated }) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    isActive: true,
+  });
+  const [error, setError] = useState("");
+
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    try {
+      const response = await apiRequest("/advertisements", {
+        method: "POST",
+        body: JSON.stringify({
+          adId: `ADV${Date.now().toString().slice(-6)}`,
+          createdBy: adminId,
+          title: formData.title,
+          description: formData.description,
+          isActive: formData.isActive,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to create advertisement");
+      }
+      setFormData({ title: "", description: "", isActive: true });
+      onCreated?.();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <form className="form-panel" onSubmit={handleSubmit}>
+      <h3>Create Advertisement</h3>
+      <label>
+        Title
+        <input name="title" value={formData.title} onChange={handleChange} required className="input-control" />
+      </label>
+      <label>
+        Description
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          rows={3}
+          className="input-control"
+        />
+      </label>
+      <label className="checkbox">
+        <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
+        Active
+      </label>
+      {error && <p className="error-text">{error}</p>}
+      <button className="btn" type="submit">
+        Create
+      </button>
+    </form>
+  );
+}
+
 
 function UserManagementPanel({ users = [], isLoading, error, onRefresh }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -1444,13 +1915,6 @@ function PaymentsManagementPanel({
 
   const currency = payments.find((payment) => payment.currency)?.currency || DEFAULT_CURRENCY;
 
-  const formatDateTime = (value) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString();
-  };
-
   const getBookingLabel = (payment) => {
     const booking = payment?.booking || payment?.bookingId;
     if (!booking) return "-";
@@ -1769,148 +2233,6 @@ function PaymentsManagementPanel({
   );
 }
 
-function AnnouncementForm({ adminId, onCreated }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    status: "draft",
-  });
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    setIsSubmitting(true);
-    try {
-      const response = await apiRequest("/announcements", {
-        method: "POST",
-        body: JSON.stringify({
-          announcementId: `ANN${Date.now().toString().slice(-6)}`,
-          createdBy: adminId,
-          title: formData.title,
-          content: formData.content,
-          status: formData.status,
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to create announcement");
-      }
-      setFormData({ title: "", content: "", status: "draft" });
-      onCreated?.();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form className="form-panel" onSubmit={handleSubmit}>
-      <h3>Create Announcement</h3>
-      <label>
-        Title
-        <input name="title" value={formData.title} onChange={handleChange} required className="input-control" />
-      </label>
-      <label>
-        Content
-        <textarea
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          required
-          rows={3}
-          className="input-control"
-        />
-      </label>
-      <label>
-        Status
-        <select name="status" value={formData.status} onChange={handleChange} className="input-control">
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="archived">Archived</option>
-        </select>
-      </label>
-      {error && <p className="error-text">{error}</p>}
-      <button className="btn" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : "Create"}
-      </button>
-    </form>
-  );
-}
-
-function AdvertisementForm({ adminId, onCreated }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    isActive: true,
-  });
-  const [error, setError] = useState("");
-
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    try {
-      const response = await apiRequest("/advertisements", {
-        method: "POST",
-        body: JSON.stringify({
-          adId: `ADV${Date.now().toString().slice(-6)}`,
-          createdBy: adminId,
-          title: formData.title,
-          description: formData.description,
-          isActive: formData.isActive,
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to create advertisement");
-      }
-      setFormData({ title: "", description: "", isActive: true });
-      onCreated?.();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  return (
-    <form className="form-panel" onSubmit={handleSubmit}>
-      <h3>Create Advertisement</h3>
-      <label>
-        Title
-        <input name="title" value={formData.title} onChange={handleChange} required className="input-control" />
-      </label>
-      <label>
-        Description
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={3}
-          className="input-control"
-        />
-      </label>
-      <label className="checkbox">
-        <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
-        Active
-      </label>
-      {error && <p className="error-text">{error}</p>}
-      <button className="btn" type="submit">
-        Create
-      </button>
-    </form>
-  );
-}
 
 function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -1990,7 +2312,15 @@ function AdminDashboard() {
       </header>
 
       <div className="panel-stack">
+       
         <OverviewSection metrics={metrics} currency={currency} onRefresh={refreshAll} isLoading={overviewLoading} />
+         <FinancialManagementPanel />
+         <AnnouncementManagementPanel adminId={user?._id} />
+        <div className="admin-panels">
+          <AdvertisementForm adminId={user?._id} />
+        </div>
+        
+
         <UserManagementPanel
           users={usersResource.data}
           isLoading={usersResource.isLoading}
@@ -2026,10 +2356,9 @@ function AdminDashboard() {
             ]);
           }}
         />
-        <div className="admin-panels">
-          <AnnouncementForm adminId={user?._id} />
-          <AdvertisementForm adminId={user?._id} />
-        </div>
+        
+
+
       </div>
     </div>
   );
