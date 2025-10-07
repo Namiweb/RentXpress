@@ -533,7 +533,7 @@ function CustomerDashboard() {
       const totalDays = differenceInDays(bookingForm.startDate, bookingForm.endDate);
       const vehicleRate = bookingModal.pricing?.dailyRate || 0;
       const driverKilometers = bookingForm.withDriver ? Math.max(0, Number(bookingForm.expectedKm) || 0) : 0;
-      const driverFee = bookingForm.withDriver ? driverKilometers * 500 : 0;
+      const driverFee = bookingForm.withDriver ? driverKilometers * 50 : 0;
       const rentalSubtotal = vehicleRate * totalDays;
       const totalAmount = rentalSubtotal + driverFee;
 
@@ -1178,7 +1178,7 @@ function CustomerDashboard() {
                 </p>
                 {paymentContext.pricing?.driverFee ? (
                   <p className="muted">
-                    Base rental {formatCurrency(paymentContext.pricing?.subtotal)} + driver fee {formatCurrency(paymentContext.pricing?.driverFee)} (LKR 500 per km)
+                    Base rental {formatCurrency(paymentContext.pricing?.subtotal)} + driver fee {formatCurrency(paymentContext.pricing?.driverFee)} (LKR 50 per km)
                   </p>
                 ) : null}
                 <label>
