@@ -1,6 +1,6 @@
 //user routes
 import express from "express";
-import { createUser, getAllUsers, updateUser,deleteUser, getUserById } from "../controller/userController.js";
+import { createUser, getAllUsers, updateUser,deleteUser, getUserById } from "../controller/UserController.js";
 
 const router = express.Router();
 

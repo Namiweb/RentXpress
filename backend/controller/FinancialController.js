@@ -378,3 +378,17 @@ export async function getFinancialSummary(req, res) {
     res.status(500).json({ message: "Error fetching financial summary", error: error.message });
   }
 }
+
+export const getPaidFinancials = async (req, res) => {
+  try {
+    const paidFinancials = await Financial.find({ status: "paid" }).populate({
+      path: "recipientId",
+      select: "profile email",
+    });
+
+    res.status(200).json(paidFinancials);
+  } catch (error) {
+    console.error("Error fetching paid financials:", error);
+    res.status(500).json({ message: "Failed to fetch paid financials" });
+  }
+};

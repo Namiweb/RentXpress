@@ -14,8 +14,9 @@ const financialSchema = new mongoose.Schema({
   },
   recipientId: { 
     type: mongoose.Schema.Types.ObjectId, 
+    ref: "users",
     required: true, 
-    refPath: 'recipientType' 
+    // refPath: 'recipientType' 
   },
   amount: { type: Number, required: true },
   currency: { type: String, default: "LKR" },
@@ -25,11 +26,11 @@ const financialSchema = new mongoose.Schema({
   },
   calculationDetails: {
     baseSalary: { type: Number, default: 0 },
+    revenueShare: { type: Number, default: 0 },
     tripCount: { type: Number, default: 0 },
     tripEarnings: { type: Number, default: 0 },
     inspectionCount: { type: Number, default: 0 },
     inspectionEarnings: { type: Number, default: 0 },
-    commissionRate: { type: Number, default: 0 },
     bonus: { type: Number, default: 0 },
     deductions: { type: Number, default: 0 }
   },
@@ -41,7 +42,7 @@ const financialSchema = new mongoose.Schema({
   paymentDate: { type: Date },
   processedBy: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: "User" 
+    ref: "users" 
   },
   notes: { type: String }
 }, { timestamps: true });

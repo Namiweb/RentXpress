@@ -1161,7 +1161,7 @@ function CustomerDashboard() {
                 </label>
                 {bookingForm.withDriver && (
                   <p className="muted">
-                    Driver fee estimated at {formatCurrency((Number(bookingForm.expectedKm) || 0) * 500)} (LKR 500 per km)
+                    Driver fee estimated at {formatCurrency((Number(bookingForm.expectedKm) || 0) * 50)} (LKR 50 per km)
                   </p>
                 )}
                 {bookingError && <p className="error-text">{bookingError}</p>}

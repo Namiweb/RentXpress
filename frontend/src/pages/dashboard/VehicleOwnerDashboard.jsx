@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { apiRequest } from "../../services/api.js";
+import { extractDataFromDataUrl, fileToDataUrl } from "../../utils/uploadImage.js";
 
 const ACTIVE_BOOKING_STATUSES = new Set(["pending", "confirmed", "started", "in_progress", "in-progress"]);
 
@@ -12,26 +13,6 @@ const inspectionStatusLabels = {
   available: "Approved",
   needs_maintenance: "Needs Maintenance",
 };
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-}
-
-function extractDataFromDataUrl(dataUrl) {
-  if (!dataUrl) {
-    return { data: undefined, contentType: undefined };
-  }
-  const match = dataUrl.match(/^data:(.+);base64,(.*)$/);
-  if (match) {
-    return { contentType: match[1], data: match[2] };
-  }
-  return { data: dataUrl, contentType: undefined };
-}
 
 const normalizeId = (value) => {
   if (!value) return "";

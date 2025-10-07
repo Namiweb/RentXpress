@@ -5,12 +5,25 @@ import SalaryConfig from "../models/SalaryConfig.js";
 import Vehicles from "../models/VehiclesModel.js";
 import VehicleInspection from "../models/VehicleInspectionModel.js";
 import Payment from "../models/paymentModels.js";
+import Financial from "../models/Financial.js";
 
 const monthlyJob = new CronJob(
-  // "0 0 1 1 * *", 
-  "0 54 * * * *",
+  "0 58 * * * *", 
+
   async () => {
     console.log("Monthly job running at 1:00 AM on the 1st day of the month");
+
+    const now = new Date();
+
+    let lastMonth = now.getMonth() + 1;
+    let year = now.getFullYear();
+
+    if (lastMonth === 1) {
+      lastMonth = 12; 
+      year -= 1;
+    } else {
+      lastMonth -= 1;
+    }
 
     const bookings = await lastMonthBookings();
     const inspections = await lastMonthVehicleInspections();
@@ -65,11 +78,13 @@ const monthlyJob = new CronJob(
 
       let salary = 0;
       if (user.role === "driver") {
-        salary = config.commissionRates.revenueShare * totalEarnings / 100; 
+        salary =
+          config.baseSalary +
+          (config.commissionRates.perTrip * tripCount * totalEarnings) / 100; 
         tripCount > config.bonuses.minTripsForBonus && (salary += config.bonuses.bonusAmount);
         (config.deductions.otherDeductions <= salary) ? salary -= config.deductions.otherDeductions : salary = 0;
       } else if (user.role === "vehicle_owner") {
-        salary = config.baseSalary + (config.commissionRates.perTrip * tripCount * totalEarnings / 100); 
+        salary = (config.commissionRates.revenueShare * totalEarnings) / 100; 
         tripCount > config.bonuses.minTripsForBonus && (salary += config.bonuses.bonusAmount);
       } else if (user.role === "inspector") {
         salary = config.baseSalary + (config.commissionRates.perInspection * tripCount); 
@@ -81,13 +96,80 @@ const monthlyJob = new CronJob(
 
       console.log(`User: ${user._id}, Role: ${user.role}, Trips/Inspections: ${tripCount}, Total Earnings: ${totalEarnings.toFixed(2)}, Calculated Salary: ${salary.toFixed(2)}`);
 
+      if (salary == 0) {
+        return
+      }
 
+      let salaryData = {
+        baseSalary: config.baseSalary,
+        revenueShare:
+          (config.commissionRates.revenueShare * totalEarnings) / 100,
+        tripCount: user.role == "inspector" ? 0 : tripCount,
+        tripEarnings:
+          user.role == "driver"
+            ? (config.commissionRates.perTrip * tripCount * totalEarnings) / 100
+            : 0,
+        inspectionCount: user.role == "inspector" ? tripCount : 0,
+        inspectionEarnings:
+          user.role == "inspector"
+            ? config.commissionRates.perInspection * tripCount
+            : 0,
+        bonus:
+          user.role == "inspector"
+            ? tripCount > config.bonuses.minInspectionsForBonus &&
+              config.bonuses.inspectionBonus
+            : tripCount > config.bonuses.minTripsForBonus &&
+              config.bonuses.bonusAmount,
+        deductions: config.deductions.otherDeductions + taxDeduction,
+      };
+
+      paySalary(user._id, user.role, year, lastMonth, salary, salaryData)
     });
   },
   null,
   false, 
   "Asia/Colombo" 
 );
+
+const paySalary = async (id, role, year, month, total, salaryData) => {
+  try {
+    const salary = await Financial.findOneAndUpdate(
+      {
+        recipientId: id,
+        type: "salary",
+        "period.month": month,
+        "period.year": year,
+      },
+      {
+        financialId: `SAL${year}${month
+          .toString()
+          .padStart(2, "0")}${id.toString().slice(-6)}`,
+        type: "salary",
+        recipientType: role,
+        recipientId: id,
+        amount: total,
+        period: { month, year },
+        calculationDetails: {
+          baseSalary: salaryData.baseSalary,
+          revenueShare: salaryData.revenueShare,
+          tripCount: salaryData.tripCount,
+          tripEarnings: salaryData.tripEarnings,
+          inspectionCount: salaryData.inspectionCount,
+          inspectionEarnings: salaryData.inspectionEarnings,
+          bonus: salaryData.bonus,
+          deductions: salaryData.deductions,
+        },
+        status: "paid",
+      },
+      { upsert: true, new: true }
+    );
+
+    return salary;
+  } catch (err) {
+    console.error("Error paying salary:", err);
+    return;
+  }
+};
 
 const checkVehicleOwner = async (vehicleId, userId) => {
   try {
