@@ -218,6 +218,7 @@ function DriverTrips({
   updatingBookingId,
   customerMap,
 }) {
+  console.log("ASSIGNMENTS: ", assignments);
   return (
     <section className="driver-panel">
       <header className="panel-header">

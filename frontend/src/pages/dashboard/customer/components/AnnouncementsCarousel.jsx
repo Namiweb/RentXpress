@@ -19,7 +19,7 @@ function AnnouncementsCarousel() {
     setLoading(true);
     setError("");
     try {
-      const response = await apiRequest("/announcements");
+      const response = await apiRequest("/announcements/published");
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Failed to load announcements");

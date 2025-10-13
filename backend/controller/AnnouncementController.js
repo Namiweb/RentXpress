@@ -21,6 +21,15 @@ export async function getAllAnnouncements(req, res) {
   }
 }
 
+export async function getPublishedAnnouncements(req, res) {
+  try {
+    const announcements = await Announcement.find({status:"published"});
+    res.status(200).json(announcements);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching announcements", error });
+  }
+}
+
 // Get announcement by ID
 export async function getAnnouncementById(req, res) {
   try {

@@ -4,12 +4,14 @@ import {
   getAllPayments,
   getPaymentById,
   updatePayment,
-  deletePayment
+  deletePayment,
+  getAdvancedComparison
 } from "../controller/paymentController.js";
 
 const router = express.Router();
 
 router.post("/", createPayment);
+router.get("/advanced", getAdvancedComparison);
 router.get("/", getAllPayments);
 router.get("/:id", getPaymentById);
 router.put("/:id", updatePayment);
