@@ -8,7 +8,7 @@ import Payment from "../models/paymentModels.js";
 import Financial from "../models/Financial.js";
 
 const monthlyJob = new CronJob(
-  "0 0 1 1 * *", 
+  "0 25 * * * *", 
 
   async () => {
     console.log("Monthly job running at 1:00 AM on the 1st day of the month");
