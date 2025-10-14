@@ -18,6 +18,7 @@ import {
 } from "../../services/vehicles.js";
 import InspectorNavigation from "./inspector/components/InspectorNavigation.jsx";
 import InspectorHero from "./inspector/components/InspectorHero.jsx";
+import ProfilePage from "./inspector/components/ProfilePage.jsx";
 
 const CHECKLIST_ITEMS = [
   { key: "brakes", label: "Brakes" },
@@ -124,6 +125,10 @@ function formatDate(input) {
   const date = new Date(input);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString();
+}
+
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
 }
 
 function getImageSrc(image) {
@@ -1393,6 +1398,7 @@ function InspectorDashboard() {
                   type="date"
                   name="from"
                   value={recordFiltersDraft.from}
+                  max={getTodayDate()}
                   onChange={(event) =>
                     setRecordFiltersDraft((prev) => ({ ...prev, from: event.target.value }))
                   }
@@ -1404,6 +1410,7 @@ function InspectorDashboard() {
                   type="date"
                   name="to"
                   value={recordFiltersDraft.to}
+                  max={getTodayDate()}
                   onChange={(event) =>
                     setRecordFiltersDraft((prev) => ({ ...prev, to: event.target.value }))
                   }
@@ -1707,6 +1714,16 @@ function InspectorDashboard() {
               </div>
             )}
           </section>
+        )}
+
+        {activeTab === "profile" && (
+          <ProfilePage 
+            user={user} 
+            onProfileUpdate={(updatedUser) => {
+              // Handle profile update if needed
+              console.log('Profile updated:', updatedUser);
+            }} 
+          />
         )}
 
       </main>

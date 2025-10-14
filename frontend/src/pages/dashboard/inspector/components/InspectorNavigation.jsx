@@ -1,4 +1,4 @@
-import { ClipboardCheckIcon, FileTextIcon, HistoryIcon, LayoutDashboardIcon, LogOutIcon, CarIcon } from "lucide-react";
+import { ClipboardCheckIcon, FileTextIcon, HistoryIcon, LayoutDashboardIcon, LogOutIcon, CarIcon, UserIcon } from "lucide-react";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboardIcon },
@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { id: "vehicles", label: "Pending Approval", icon: CarIcon },
   { id: "history", label: "History", icon: HistoryIcon },
   { id: "records", label: "Records", icon: FileTextIcon },
+  { id: "profile", label: "Profile", icon: UserIcon },
 ];
 
 function InspectorNavigation({ activeTab, onTabChange, user, onLogout }) {
