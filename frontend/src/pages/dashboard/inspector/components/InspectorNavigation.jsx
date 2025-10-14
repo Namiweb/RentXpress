@@ -1,8 +1,9 @@
-import { ClipboardCheckIcon, FileTextIcon, HistoryIcon, LayoutDashboardIcon, LogOutIcon } from "lucide-react";
+import { ClipboardCheckIcon, FileTextIcon, HistoryIcon, LayoutDashboardIcon, LogOutIcon, CarIcon } from "lucide-react";
 
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboardIcon },
   { id: "inspections", label: "Inspections", icon: ClipboardCheckIcon },
+  { id: "vehicles", label: "Vehicles", icon: CarIcon },
   { id: "history", label: "History", icon: HistoryIcon },
   { id: "records", label: "Records", icon: FileTextIcon },
 ];
