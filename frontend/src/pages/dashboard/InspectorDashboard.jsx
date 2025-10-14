@@ -11,6 +11,11 @@ import {
   deleteVehicleInspection,
   getVehicleInspection,
 } from "../../services/vehicleInspections.js";
+import {
+  getPendingVehicles,
+  approveVehicle,
+  rejectVehicle,
+} from "../../services/vehicles.js";
 import InspectorNavigation from "./inspector/components/InspectorNavigation.jsx";
 import InspectorHero from "./inspector/components/InspectorHero.jsx";
 
@@ -119,6 +124,35 @@ function formatDate(input) {
   const date = new Date(input);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString();
+}
+
+function getImageSrc(image) {
+  if (!image) return null;
+
+  // If it's a string, treat it as a URL
+  if (typeof image === "string") {
+    return image.trim();
+  }
+
+  // If it has a url property, use it
+  if (image.url && typeof image.url === "string") {
+    return image.url.trim();
+  }
+
+  // If it has base64 data, construct data URL
+  if (image.data && image.contentType) {
+    // Remove any data URL prefix if it already exists
+    const cleanData = image.data.replace(/^data:[^;]*;base64,/, '');
+    return `data:${image.contentType};base64,${cleanData}`;
+  }
+
+  // If it just has data without contentType, assume it's an image
+  if (image.data) {
+    const cleanData = image.data.replace(/^data:[^;]*;base64,/, '');
+    return `data:image/jpeg;base64,${cleanData}`;
+  }
+
+  return null;
 }
 
 function VehicleSummary({ vehicle, enteredPlate }) {
@@ -403,6 +437,12 @@ function InspectorDashboard() {
   const [assignmentsError, setAssignmentsError] = useState("");
   const [actionBusyId, setActionBusyId] = useState(null);
 
+  // Vehicle approval states
+  const [pendingVehicles, setPendingVehicles] = useState([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const [vehiclesError, setVehiclesError] = useState("");
+  const [approvalModal, setApprovalModal] = useState(null);
+
   const heroMetrics = useMemo(() => {
     const records = Array.isArray(inspectionRecords) ? inspectionRecords : [];
     const stats = {
@@ -553,6 +593,21 @@ function InspectorDashboard() {
       setIsLoadingAssignments(false);
     }
   }, [inspectorId]);
+
+  const loadPendingVehicles = useCallback(async () => {
+    setIsLoadingVehicles(true);
+    setVehiclesError("");
+    try {
+      const data = await getPendingVehicles();
+      console.log('Loaded pending vehicles:', data); // Debug log
+      setPendingVehicles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading pending vehicles:', error);
+      setVehiclesError(error.message);
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  }, []);
 
   const handleCreateNewInspection = useCallback(() => {
     setActiveInspection(null);
@@ -706,6 +761,12 @@ function InspectorDashboard() {
   useEffect(() => {
     loadAssignments();
   }, [loadAssignments]);
+
+  useEffect(() => {
+    if (activeTab === "vehicles") {
+      loadPendingVehicles();
+    }
+  }, [activeTab, loadPendingVehicles]);
 
   useEffect(() => {
     if (activeVehicle?.basicInfo?.licensePlate) {
@@ -882,6 +943,34 @@ function InspectorDashboard() {
     }
   };
 
+  const handleApproveVehicle = useCallback(async (vehicleId, notes = "") => {
+    try {
+      setActionBusyId(`approve:${vehicleId}`);
+      await approveVehicle(vehicleId, notes);
+      setFeedback({ type: "success", message: "Vehicle approved successfully" });
+      loadPendingVehicles();
+      setApprovalModal(null);
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message });
+    } finally {
+      setActionBusyId(null);
+    }
+  }, [loadPendingVehicles]);
+
+  const handleRejectVehicle = useCallback(async (vehicleId, reason = "") => {
+    try {
+      setActionBusyId(`reject:${vehicleId}`);
+      await rejectVehicle(vehicleId, reason);
+      setFeedback({ type: "success", message: "Vehicle rejected successfully" });
+      loadPendingVehicles();
+      setApprovalModal(null);
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message });
+    } finally {
+      setActionBusyId(null);
+    }
+  }, [loadPendingVehicles]);
+
   const isCompletedInspection = activeInspection?.status === "completed";
   const formDisabled = false;
 
@@ -899,9 +988,8 @@ function InspectorDashboard() {
 
         {feedback && (
           <div
-            className={`inspector-alert ${
-              feedback.type === "error" ? "inspector-alert--error" : "inspector-alert--success"
-            }`}
+            className={`inspector-alert ${feedback.type === "error" ? "inspector-alert--error" : "inspector-alert--success"
+              }`}
           >
             <span>{feedback.message}</span>
             <button type="button" className="btn btn-text" onClick={() => setFeedback(null)}>
@@ -930,7 +1018,7 @@ function InspectorDashboard() {
                     <p className="panel-subtitle">
                       {activeVehicle
                         ? `${activeVehicle.basicInfo?.make || ""} ${activeVehicle.basicInfo?.model || ""}`.trim() ||
-                          "Vehicle details loaded"
+                        "Vehicle details loaded"
                         : "Jump into the workspace to start a new report"}
                     </p>
                   </div>
@@ -968,7 +1056,7 @@ function InspectorDashboard() {
                   <p className="panel-subtitle">
                     {activeVehicle
                       ? `${activeVehicle.basicInfo?.make || ""} ${activeVehicle.basicInfo?.model || ""}`.trim() ||
-                        "Vehicle details loaded"
+                      "Vehicle details loaded"
                       : "Enter vehicle details and capture findings"}
                   </p>
                 </div>
