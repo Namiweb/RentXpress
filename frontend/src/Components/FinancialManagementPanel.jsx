@@ -964,7 +964,7 @@ function FinancialRecordsTable() {
             </div>
           )}
         </div> */}
-        {/* <div className="management-subpanel">
+        <div className="management-subpanel">
           
           {payoutsLoading ? (
             <p>Loading payouts…</p>
@@ -1012,66 +1012,7 @@ function FinancialRecordsTable() {
               </table>
             </div>
           )}
-        </div> */}
-
-        <div className="management-subpanel">
-  {payoutsLoading ? (
-    <p>Loading payouts…</p>
-  ) : !payouts || payouts.length === 0 ? (
-    <p>No driver payouts recorded.</p>
-  ) : (
-    <div className="table-wrapper">
-      <table className="management-table">
-        <thead>
-          <tr>
-            <th>Payout</th>
-            <th>User</th>
-            <th>Role</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payouts.map((payout) => {
-            // Safe access to nested properties
-            const financialId = payout?.financialId || "N/A";
-            const date = payout?.processedAt || payout?.createdAt;
-            const recipient = payout?.recipientId;
-            const userName = getUserName(recipient);
-            const userEmail = recipient?.email || "No email";
-            const recipientType = payout?.recipientType || "-";
-            const amount = payout?.amount || 0;
-            const status = payout?.status;
-
-            return (
-              <tr key={payout._id || Math.random().toString(36).substr(2, 9)}>
-                <td>
-                  <div className="cell-stack">
-                    <strong>{financialId}</strong>
-                    <span className="muted">
-                      {date ? formatDate(date) : "No date"}
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  <div className="cell-stack">
-                    <span>{userName}</span>
-                    <span className="muted">{userEmail}</span>
-                  </div>
-                </td>
-                <td>{recipientType}</td>
-                <td>{formatCurrency(amount)}</td>
-                <td>
-                  <StatusPill value={status} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+        </div>
       </div>
     </section>
   );
