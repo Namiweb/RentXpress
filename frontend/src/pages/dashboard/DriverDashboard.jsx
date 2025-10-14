@@ -1307,7 +1307,7 @@ function DriverRequests({
     return now > expiryTime;
   };
 
-  // MAIN BUSINESS LOGIC: Drivers can only accept requests scheduled for TODAY
+
   // This prevents drivers from accepting future trips in advance
   const canAcceptRequest = (request) => {
     const scheduledAt = getBookingScheduledDateTime(request);
