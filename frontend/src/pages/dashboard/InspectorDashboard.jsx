@@ -1611,6 +1611,104 @@ function InspectorDashboard() {
                 ))}
               </div>
             )}
+
+            {/* Approval Modal */}
+            {approvalModal && (
+              <div className="modal-overlay">
+                <div className="modal">
+                  <div className="modal-header">
+                    <h4>
+                      {approvalModal.type === "approve" ? "Approve" : "Reject"} Vehicle
+                    </h4>
+                    <button
+                      type="button"
+                      className="btn btn-text"
+                      onClick={() => setApprovalModal(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="modal-body">
+                    <p>
+                      {approvalModal.type === "approve"
+                        ? "Are you sure you want to approve this vehicle?"
+                        : "Please provide a reason for rejecting this vehicle:"}
+                    </p>
+
+                    <div className="vehicle-summary">
+                      <strong>
+                        {approvalModal.vehicle.basicInfo?.make} {approvalModal.vehicle.basicInfo?.model} ({approvalModal.vehicle.basicInfo?.year})
+                      </strong>
+                      <br />
+                      License: {approvalModal.vehicle.basicInfo?.licensePlate}
+                    </div>
+
+                    {approvalModal.type === "approve" ? (
+                      <div>
+                        <label>
+                          Approval Notes (Optional):
+                          <textarea
+                            rows={3}
+                            placeholder="Add any inspection notes..."
+                            value={approvalModal.notes || ""}
+                            onChange={(e) => setApprovalModal(prev => ({ ...prev, notes: e.target.value }))}
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        <label>
+                          Rejection Reason *:
+                          <textarea
+                            rows={4}
+                            placeholder="Please explain why this vehicle is being rejected..."
+                            value={approvalModal.reason || ""}
+                            onChange={(e) => setApprovalModal(prev => ({ ...prev, reason: e.target.value }))}
+                            required
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setApprovalModal(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${approvalModal.type === "approve" ? "btn-success" : "btn-danger"}`}
+                      onClick={() => {
+                        if (approvalModal.type === "approve") {
+                          handleApproveVehicle(approvalModal.vehicle._id, approvalModal.notes || "");
+                        } else {
+                          if (!approvalModal.reason?.trim()) {
+                            alert("Please provide a reason for rejection");
+                            return;
+                          }
+                          handleRejectVehicle(approvalModal.vehicle._id, approvalModal.reason);
+                        }
+                      }}
+                      disabled={
+                        actionBusyId === `approve:${approvalModal.vehicle._id}` ||
+                        actionBusyId === `reject:${approvalModal.vehicle._id}` ||
+                        (approvalModal.type === "reject" && !approvalModal.reason?.trim())
+                      }
+                    >
+                      {approvalModal.type === "approve" ? "Approve Vehicle" : "Reject Vehicle"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
       </main>
     </div>
   );
