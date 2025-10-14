@@ -25,3 +25,15 @@ export async function getVehicles(query = {}) {
   const response = await apiRequest(`/vehicles${queryString ? `?${queryString}` : ""}`);
   return handleResponse(response);
 }
+
+// Get pending vehicles for inspection approval
+export async function getPendingVehicles() {
+  const response = await apiRequest("/vehicles?status=pending");
+  return handleResponse(response);
+}
+
+// Get vehicle by ID
+export async function getVehicleById(vehicleId) {
+  const response = await apiRequest(`/vehicles/${vehicleId}`);
+  return handleResponse(response);
+}
