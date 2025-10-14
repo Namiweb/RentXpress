@@ -37,3 +37,19 @@ export async function getVehicleById(vehicleId) {
   const response = await apiRequest(`/vehicles/${vehicleId}`);
   return handleResponse(response);
 }
+// Approve a vehicle
+export async function approveVehicle(vehicleId, inspectionNotes = "") {
+  const response = await apiRequest(`/vehicles/${vehicleId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      status: "approved",
+      inspectionStatus: "available",
+      lastInspection: {
+        inspectedAt: new Date(),
+        decision: "available",
+        notes: inspectionNotes
+      }
+    }),
+  });
+  return handleResponse(response);
+}
