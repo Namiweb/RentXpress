@@ -53,3 +53,20 @@ export async function approveVehicle(vehicleId, inspectionNotes = "") {
   });
   return handleResponse(response);
 }
+// Reject a vehicle
+export async function rejectVehicle(vehicleId, rejectionReason = "") {
+  const response = await apiRequest(`/vehicles/${vehicleId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      status: "rejected",
+      inspectionStatus: "needs_maintenance",
+      lastInspection: {
+        inspectedAt: new Date(),
+        decision: "needs_maintenance",
+        issues: rejectionReason,
+        notes: rejectionReason
+      }
+    }),
+  });
+  return handleResponse(response);
+}
