@@ -467,7 +467,7 @@ body {
   background: #ffffff;
 }
 
-.assignment-list-item > button {
+.assignment-list-item>button {
   border: none;
   background: transparent;
   color: inherit;
@@ -896,6 +896,7 @@ table th {
     justify-content: space-between;
   }
 }
+
 .section-card {
   background: #ffffff;
   border-radius: 20px;
@@ -1099,7 +1100,7 @@ table th {
   gap: 1.25rem;
 }
 
-.booking-list--feedback > li {
+.booking-list--feedback>li {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
   padding: 1.25rem 1.5rem;
@@ -1108,7 +1109,7 @@ table th {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.booking-list--feedback > li:hover {
+.booking-list--feedback>li:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
 }
@@ -1125,7 +1126,7 @@ table th {
   gap: 1.5rem;
 }
 
-.booking-card__body > div {
+.booking-card__body>div {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1173,7 +1174,7 @@ table th {
   font-weight: 700;
 }
 
-.booking-list--compact > li {
+.booking-list--compact>li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1185,7 +1186,7 @@ table th {
   gap: 1.25rem;
 }
 
-.booking-list--compact > li > div {
+.booking-list--compact>li>div {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1197,7 +1198,7 @@ table th {
 }
 
 @media (max-width: 720px) {
-  .booking-list--compact > li {
+  .booking-list--compact>li {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1636,7 +1637,7 @@ table th {
 }
 
 .vehicle-card-modern__header,
-.booking-card-modern > header {
+.booking-card-modern>header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -1684,7 +1685,7 @@ table th {
 }
 
 .vehicle-card-modern__footer,
-.booking-card-modern > footer {
+.booking-card-modern>footer {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
@@ -1962,8 +1963,9 @@ table th {
 }
 
 @media (max-width: 640px) {
+
   .vehicle-card-modern__footer,
-  .booking-card-modern > footer {
+  .booking-card-modern>footer {
     flex-direction: column;
   }
 
@@ -3097,6 +3099,7 @@ table th {
   0% {
     background-position: -200px 0;
   }
+
   100% {
     background-position: 200px 0;
   }
@@ -3534,14 +3537,14 @@ table th {
     width: 100%;
   }
 
-.customer-main {
-  padding: 1.5rem;
-}
+  .customer-main {
+    padding: 1.5rem;
+  }
 
-.customer-hero {
-  flex-direction: column;
-  align-items: flex-start;
-}
+  .customer-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .landing-page {
@@ -3866,4 +3869,21 @@ table th {
   .landing-hero-actions {
     flex-direction: column;
   }
+}
+
+/* Vehicle Approval Styles */
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.vehicle-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
