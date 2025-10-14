@@ -1494,7 +1494,7 @@ function InspectorDashboard() {
             )}
           </section>
         )}
-        
+
         {activeTab === "vehicles" && (
           <section className="panel inspector-panel">
             <header className="panel-header">
@@ -1526,6 +1526,91 @@ function InspectorDashboard() {
                       </span>
                     </div>
 
+                    <div className="vehicle-details">
+                      <div className="detail-row">
+                        <strong>License Plate:</strong> {vehicle.basicInfo?.licensePlate || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Category:</strong> {vehicle.details?.category || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Fuel Type:</strong> {vehicle.details?.fuelType || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Transmission:</strong> {vehicle.details?.transmission || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Condition:</strong> {vehicle.details?.condition || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Daily Rate:</strong> {vehicle.pricing?.currency} {vehicle.pricing?.dailyRate || "N/A"}
+                      </div>
+                      <div className="detail-row">
+                        <strong>Location:</strong> {vehicle.location?.city}, {vehicle.location?.address}
+                      </div>
+                      {vehicle.details?.description && (
+                        <div className="detail-row">
+                          <strong>Description:</strong> {vehicle.details.description}
+                        </div>
+                      )}
+                    </div>
+
+                    {vehicle.images && vehicle.images.length > 0 && (
+                      <div className="vehicle-images">
+                        <strong>Images:</strong>
+                        <div className="image-grid">
+                          {vehicle.images.slice(0, 3).map((image, index) => {
+                            const imageSrc = getImageSrc(image);
+
+                            return (
+                              <div key={index} className="image-thumbnail">
+                                {imageSrc ? (
+                                  <img
+                                    src={imageSrc}
+                                    alt={`Vehicle ${index + 1}`}
+                                    onError={(e) => {
+                                      // Hide the image and show fallback
+                                      e.target.style.display = 'none';
+                                      const fallback = e.target.parentNode.querySelector('.no-image');
+                                      if (fallback) fallback.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="no-image" style={{ display: imageSrc ? 'none' : 'flex' }}>
+                                  📷
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {vehicle.images.length > 3 && (
+                            <div className="image-count">+{vehicle.images.length - 3} more</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="vehicle-actions">
+                      <button
+                        type="button"
+                        className="btn btn-success"
+                        onClick={() => setApprovalModal({ type: "approve", vehicle })}
+                        disabled={actionBusyId === `approve:${vehicle._id}` || actionBusyId === `reject:${vehicle._id}`}
+                      >
+                        {actionBusyId === `approve:${vehicle._id}` ? "Approving..." : "Approve"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => setApprovalModal({ type: "reject", vehicle })}
+                        disabled={actionBusyId === `approve:${vehicle._id}` || actionBusyId === `reject:${vehicle._id}`}
+                      >
+                        {actionBusyId === `reject:${vehicle._id}` ? "Rejecting..." : "Reject"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
       </main>
     </div>
   );
