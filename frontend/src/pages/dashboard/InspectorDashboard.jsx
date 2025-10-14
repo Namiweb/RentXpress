@@ -1494,6 +1494,37 @@ function InspectorDashboard() {
             )}
           </section>
         )}
+        
+        {activeTab === "vehicles" && (
+          <section className="panel inspector-panel">
+            <header className="panel-header">
+              <div>
+                <h3>Vehicle Approval</h3>
+                <p className="panel-subtitle">Review and approve vehicles submitted by owners</p>
+              </div>
+              <div className="badge">
+                {pendingVehicles.length} Pending
+              </div>
+            </header>
+
+            {vehiclesError && <p className="error-text">{vehiclesError}</p>}
+
+            {isLoadingVehicles ? (
+              <p>Loading pending vehicles...</p>
+            ) : pendingVehicles.length === 0 ? (
+              <p className="muted">No vehicles pending approval.</p>
+            ) : (
+              <div className="vehicles-grid">
+                {pendingVehicles.map((vehicle) => (
+                  <div key={vehicle._id} className="vehicle-card">
+                    <div className="vehicle-card-header">
+                      <h4>
+                        {vehicle.basicInfo?.make} {vehicle.basicInfo?.model} ({vehicle.basicInfo?.year})
+                      </h4>
+                      <span className="status status-pending">
+                        {vehicle.status === "pending" ? "Pending Approval" : vehicle.status}
+                      </span>
+                    </div>
 
       </main>
     </div>
