@@ -1099,7 +1099,7 @@ function InspectorDashboard() {
                   </label>
                 </div>
 
-                <label>
+                {/* <label>
                   Current Mileage (km)
                   <input
                     type="number"
@@ -1110,7 +1110,7 @@ function InspectorDashboard() {
                     disabled={formDisabled}
                     min={0}
                   />
-                </label>
+                </label> */}
 
                 <section className="form-section">
                   <h4>Inspection Context</h4>
@@ -1590,22 +1590,22 @@ function InspectorDashboard() {
                     )}
 
                     <div className="vehicle-actions">
-                      <button
+                      {/* <button
                         type="button"
                         className="btn btn-success"
                         onClick={() => setApprovalModal({ type: "approve", vehicle })}
                         disabled={actionBusyId === `approve:${vehicle._id}` || actionBusyId === `reject:${vehicle._id}`}
                       >
                         {actionBusyId === `approve:${vehicle._id}` ? "Approving..." : "Approve"}
-                      </button>
-                      <button
+                      </button> */}
+                      {/* <button
                         type="button"
                         className="btn btn-danger"
                         onClick={() => setApprovalModal({ type: "reject", vehicle })}
                         disabled={actionBusyId === `approve:${vehicle._id}` || actionBusyId === `reject:${vehicle._id}`}
                       >
                         {actionBusyId === `reject:${vehicle._id}` ? "Rejecting..." : "Reject"}
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 ))}

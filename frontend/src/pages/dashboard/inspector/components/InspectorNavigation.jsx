@@ -3,7 +3,7 @@ import { ClipboardCheckIcon, FileTextIcon, HistoryIcon, LayoutDashboardIcon, Log
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", icon: LayoutDashboardIcon },
   { id: "inspections", label: "Inspections", icon: ClipboardCheckIcon },
-  { id: "vehicles", label: "Vehicles", icon: CarIcon },
+  { id: "vehicles", label: "Pending Approval", icon: CarIcon },
   { id: "history", label: "History", icon: HistoryIcon },
   { id: "records", label: "Records", icon: FileTextIcon },
 ];
