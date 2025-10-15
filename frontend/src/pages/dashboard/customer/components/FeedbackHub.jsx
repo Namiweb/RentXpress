@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { MessageSquareIcon, StarIcon } from "lucide-react";
+import { MessageSquareIcon, StarIcon, DownloadIcon, EditIcon, TrashIcon } from "lucide-react";
 
 function FeedbackHub({
   feedbacks,
@@ -17,14 +17,18 @@ function FeedbackHub({
   const submittedCount = feedbacks.length;
 
   const renderStars = (rating) => {
-    if (rating == null) return <span className="muted">N/A</span>;
+    if (rating == null) return <span className="text-neutral-400">N/A</span>;
     return (
-      <div className="star-row">
+      <div className="flex gap-1">
         {Array.from({ length: 5 }).map((_, index) => (
           <StarIcon
             key={index}
             size={16}
-            className={index < rating ? "star-row__icon star-row__icon--filled" : "star-row__icon"}
+            className={`${
+              index < rating 
+                ? "text-yellow-400 fill-yellow-400" 
+                : "text-neutral-600"
+            }`}
             aria-hidden="true"
           />
         ))}
@@ -179,48 +183,82 @@ function FeedbackHub({
   };
 
   return (
-    <section className="customer-panel">
-      <div className="panel-header">
+    <section className="bg-neutral-800 rounded-xl p-6 shadow-lg">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
-          <h2>Feedback center</h2>
-          <p>Review what you have shared and leave ratings for finished bookings.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Feedback Center</h2>
+          <p className="text-neutral-300">Review what you have shared and leave ratings for finished bookings.</p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div className="flex gap-3 flex-wrap">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="flex items-center gap-2 bg-neutral-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg border border-neutral-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleDownloadReport}
             disabled={submittedCount === 0}
           >
+            <DownloadIcon size={18} />
             Download PDF
           </button>
         </div>
       </div>
 
-      <div className="tabs">
+      {/* Summary Cards */}
+      {submittedCount > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-neutral-700 rounded-lg p-4 border border-neutral-600">
+            <div className="text-neutral-400 text-sm mb-1">Total Feedback</div>
+            <div className="text-white font-semibold text-xl">{submittedCount}</div>
+          </div>
+          <div className="bg-neutral-700 rounded-lg p-4 border border-neutral-600">
+            <div className="text-neutral-400 text-sm mb-1">Overall Rating</div>
+            <div className="text-white font-semibold text-xl">{computeSummary.overall}/5</div>
+          </div>
+          <div className="bg-neutral-700 rounded-lg p-4 border border-neutral-600">
+            <div className="text-neutral-400 text-sm mb-1">Vehicle Rating</div>
+            <div className="text-white font-semibold text-xl">{computeSummary.vehicle}/5</div>
+          </div>
+          <div className="bg-neutral-700 rounded-lg p-4 border border-neutral-600">
+            <div className="text-neutral-400 text-sm mb-1">Service Rating</div>
+            <div className="text-white font-semibold text-xl">{computeSummary.service}/5</div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex border-b border-neutral-600 mb-6">
         <button
           type="button"
-          className={activeTab === "submitted" ? "tab is-active" : "tab"}
+          className={`flex-1 py-3 px-4 font-medium text-sm transition-colors ${
+            activeTab === "submitted" 
+              ? "text-orange-500 border-b-2 border-orange-500" 
+              : "text-neutral-400 hover:text-neutral-300"
+          }`}
           onClick={() => setActiveTab("submitted")}
         >
-          Submitted feedback
+          Submitted Feedback ({submittedCount})
         </button>
         <button
           type="button"
-          className={activeTab === "eligible" ? "tab is-active" : "tab"}
+          className={`flex-1 py-3 px-4 font-medium text-sm transition-colors ${
+            activeTab === "eligible" 
+              ? "text-orange-500 border-b-2 border-orange-500" 
+              : "text-neutral-400 hover:text-neutral-300"
+          }`}
           onClick={() => setActiveTab("eligible")}
         >
-          Awaiting feedback
+          Awaiting Feedback ({feedbackEligibleBookings.length})
         </button>
       </div>
 
+      {/* Submitted Feedback Tab */}
       {activeTab === "submitted" && (
-        <div className="feedback-grid">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {feedbacks.length === 0 ? (
-            <div className="empty-state">
-              <MessageSquareIcon size={48} aria-hidden="true" />
-              <h3>No feedback yet</h3>
-              <p className="muted">Once you complete a trip you can share how it went.</p>
+            <div className="col-span-full text-center py-12 bg-neutral-700 rounded-lg">
+              <MessageSquareIcon size={48} className="text-neutral-400 mx-auto mb-4" aria-hidden="true" />
+              <h3 className="text-lg font-semibold text-white mb-2">No feedback yet</h3>
+              <p className="text-neutral-400">Once you complete a trip you can share how it went.</p>
             </div>
           ) : (
             feedbacks.map((feedback) => {
@@ -245,73 +283,88 @@ function FeedbackHub({
               );
 
               return (
-                <article key={feedback._id} className="feedback-card">
-                  <header>
-                    <div>
-                      <h3>{vehicleName || "Vehicle"}</h3>
-                      {tripLabel && <p className="muted">{tripLabel}</p>}
-                      {feedback.feedbackId && <p className="muted">Ref: {feedback.feedbackId}</p>}
+                <article key={feedback._id} className="bg-neutral-700 rounded-lg p-5 border border-neutral-600 hover:border-neutral-500 transition-colors">
+                  {/* Header */}
+                  <header className="flex justify-between items-start mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-semibold text-lg mb-1">{vehicleName || "Vehicle"}</h3>
+                      {tripLabel && <p className="text-neutral-400 text-sm">{tripLabel}</p>}
+                      {feedback.feedbackId && (
+                        <p className="text-neutral-500 text-xs font-mono mt-1">Ref: {feedback.feedbackId}</p>
+                      )}
                     </div>
-                    <span className="feedback-card__overall">{overallRating}/5</span>
+                    <span className="bg-purple-800 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      {overallRating}/5
+                    </span>
                   </header>
 
-                  <div className="feedback-card__ratings">
+                  {/* Ratings */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                     <div>
-                      <p>Vehicle</p>
+                      <p className="text-neutral-400 text-sm mb-1">Vehicle</p>
                       {renderStars(feedback.ratings?.vehicleRating)}
                     </div>
                     <div>
-                      <p>Service</p>
+                      <p className="text-neutral-400 text-sm mb-1">Service</p>
                       {renderStars(feedback.ratings?.serviceRating)}
                     </div>
                     {showDriverRating && (
                       <div>
-                        <p>Driver</p>
+                        <p className="text-neutral-400 text-sm mb-1">Driver</p>
                         {renderStars(feedback.ratings?.driverRating)}
                       </div>
                     )}
                   </div>
 
+                  {/* Comments */}
                   {(feedback.comments?.vehicleComment || feedback.comments?.serviceComment) && (
-                    <div className="feedback-card__comments">
+                    <div className="mb-4 space-y-2">
                       {feedback.comments?.vehicleComment && (
-                        <p>
-                          <span className="muted">Vehicle:</span> {feedback.comments.vehicleComment}
-                        </p>
+                        <div className="bg-neutral-500 rounded px-3 py-2">
+                          <p className="text-neutral-300 text-sm">
+                            <span className="text-neutral-400 font-medium">Vehicle:</span> {feedback.comments.vehicleComment}
+                          </p>
+                        </div>
                       )}
                       {feedback.comments?.serviceComment && (
-                        <p>
-                          <span className="muted">Service:</span> {feedback.comments.serviceComment}
-                        </p>
+                        <div className="bg-neutral-500 rounded px-3 py-2">
+                          <p className="text-neutral-300 text-sm">
+                            <span className="text-neutral-400 font-medium">Service:</span> {feedback.comments.serviceComment}
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
 
+                  {/* Suggestions */}
                   {feedback.suggestions && (
-                    <p className="feedback-card__suggestion">{feedback.suggestions}</p>
+                    <div className="mb-4 bg-neutral-500 rounded px-3 py-2">
+                      <p className="text-neutral-300 text-sm">
+                        <span className="text-neutral-400 font-medium">Suggestion:</span> {feedback.suggestions}
+                      </p>
+                    </div>
                   )}
 
+                  {/* Actions */}
                   {(onEditFeedback || onDeleteFeedback) && (
-                    <footer
-                      className="feedback-card__actions"
-                      style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", flexWrap: "wrap" }}
-                    >
+                    <footer className="flex justify-end gap-2 pt-4 border-t border-neutral-600">
                       {onEditFeedback && (
                         <button
                           type="button"
-                          className="btn btn-secondary"
+                          className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-500 text-white px-3 py-2 rounded-lg text-sm transition-colors"
                           onClick={() => onEditFeedback(feedback)}
                         >
+                          <EditIcon size={16} />
                           Edit
                         </button>
                       )}
                       {onDeleteFeedback && (
                         <button
                           type="button"
-                          className="btn btn-secondary"
-                          style={{ background: "#dc2626", color: "#fff" }}
+                          className="flex items-center gap-2 bg-neutral-800 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
                           onClick={() => onDeleteFeedback(feedback)}
                         >
+                          <TrashIcon size={16} />
                           Delete
                         </button>
                       )}
@@ -324,29 +377,35 @@ function FeedbackHub({
         </div>
       )}
 
+      {/* Eligible Bookings Tab */}
       {activeTab === "eligible" && (
-        <div className="feedback-grid">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {feedbackEligibleBookings.length === 0 ? (
-            <div className="empty-state">
-              <StarIcon size={48} aria-hidden="true" />
-              <h3>You are all caught up</h3>
-              <p className="muted">Feedback has been shared for every completed trip.</p>
+            <div className="col-span-full text-center py-12 bg-neutral-700 rounded-lg">
+              <StarIcon size={48} className="text-neutral-400 mx-auto mb-4" aria-hidden="true" />
+              <h3 className="text-lg font-semibold text-white mb-2">You are all caught up</h3>
+              <p className="text-neutral-400">Feedback has been shared for every completed trip.</p>
             </div>
           ) : (
             feedbackEligibleBookings.map((booking) => (
-              <article key={booking._id} className="feedback-card">
-                <header>
-                  <div>
-                    <h3>{booking.bookingId || booking._id}</h3>
-                    <p className="muted">
-                      {getBookingVehicleName(booking)}{" · "}
-                      {buildTripLabel(booking.bookingDetails?.startDate, booking.bookingDetails?.endDate) ||
-                        "Dates pending"}
-                    </p>
-                  </div>
+              <article key={booking._id} className="bg-neutral-700 rounded-lg p-5 border border-neutral-600 hover:border-neutral-500 transition-colors">
+                <header className="mb-4">
+                  <h3 className="text-white font-semibold text-lg mb-1">
+                    {booking.bookingId || booking._id}
+                  </h3>
+                  <p className="text-neutral-400 text-sm">
+                    {getBookingVehicleName(booking)}
+                    {" · "}
+                    {buildTripLabel(booking.bookingDetails?.startDate, booking.bookingDetails?.endDate) ||
+                      "Dates pending"}
+                  </p>
                 </header>
-                <button type="button" className="btn" onClick={() => onOpenFeedback(booking)}>
-                  Leave feedback
+                <button 
+                  type="button" 
+                  className="w-full bg-neutral-800 hover:bg-orange-600 text-white py-2 rounded-lg font-medium transition-colors"
+                  onClick={() => onOpenFeedback(booking)}
+                >
+                  Leave Feedback
                 </button>
               </article>
             ))
