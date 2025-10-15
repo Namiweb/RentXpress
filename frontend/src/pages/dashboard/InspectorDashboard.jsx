@@ -11,8 +11,14 @@ import {
   deleteVehicleInspection,
   getVehicleInspection,
 } from "../../services/vehicleInspections.js";
+import {
+  getPendingVehicles,
+  approveVehicle,
+  rejectVehicle,
+} from "../../services/vehicles.js";
 import InspectorNavigation from "./inspector/components/InspectorNavigation.jsx";
 import InspectorHero from "./inspector/components/InspectorHero.jsx";
+import ProfilePage from "./inspector/components/ProfilePage.jsx";
 
 const CHECKLIST_ITEMS = [
   { key: "brakes", label: "Brakes" },
@@ -121,11 +127,39 @@ function formatDate(input) {
   return date.toLocaleString();
 }
 
+function getTodayDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function getImageSrc(image) {
+  if (!image) return null;
+
+  if (typeof image === "string") {
+    return image.trim();
+  }
+
+  if (image.url && typeof image.url === "string") {
+    return image.url.trim();
+  }
+
+  if (image.data && image.contentType) {
+    const cleanData = image.data.replace(/^data:[^;]*;base64,/, '');
+    return `data:${image.contentType};base64,${cleanData}`;
+  }
+
+  if (image.data) {
+    const cleanData = image.data.replace(/^data:[^;]*;base64,/, '');
+    return `data:image/jpeg;base64,${cleanData}`;
+  }
+
+  return null;
+}
+
 function VehicleSummary({ vehicle, enteredPlate }) {
   if (!vehicle && !enteredPlate) {
     return (
-      <div className="vehicle-summary">
-        <p className="muted">Enter a license plate to begin an inspection.</p>
+      <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+        <p className="text-gray-400">Enter a license plate to begin an inspection.</p>
       </div>
     );
   }
@@ -133,49 +167,60 @@ function VehicleSummary({ vehicle, enteredPlate }) {
   const info = vehicle?.basicInfo || {};
   const details = vehicle?.details || {};
   const inspectionStatus = vehicle?.inspectionStatus || "pending";
-  const statusClass = inspectionStatus === "not_required" ? "status-pending" : `status-${inspectionStatus}`;
+  const statusClass = inspectionStatus === "not_required" ? "bg-yellow-500/20 text-yellow-300" : 
+                     inspectionStatus === "available" ? "bg-green-500/20 text-green-300" :
+                     inspectionStatus === "needs_maintenance" ? "bg-red-500/20 text-red-300" : 
+                     "bg-gray-500/20 text-gray-300";
 
   return (
-    <div className="vehicle-summary">
-      <div className="vehicle-summary-row">
-        <strong>License Plate:</strong> {info.licensePlate || enteredPlate || "-"}
+    <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 space-y-2">
+      <div className="flex justify-between items-center">
+        <strong className="text-white">License Plate:</strong> 
+        <span className="text-gray-300">{info.licensePlate || enteredPlate || "-"}</span>
       </div>
       {vehicle ? (
         <>
-          <div className="vehicle-summary-row">
-            <strong>Vehicle:</strong> {info.make || "Unknown"} {info.model || ""}
-            {info.year ? ` (${info.year})` : ""}
+          <div className="flex justify-between items-center">
+            <strong className="text-white">Vehicle:</strong> 
+            <span className="text-gray-300">{info.make || "Unknown"} {info.model || ""}{info.year ? ` (${info.year})` : ""}</span>
           </div>
-          <div className="vehicle-summary-row">
-            <strong>Category:</strong> {details.category || "-"}
+          <div className="flex justify-between items-center">
+            <strong className="text-white">Category:</strong> 
+            <span className="text-gray-300">{details.category || "-"}</span>
           </div>
-          <div className="vehicle-summary-row">
-            <strong>Inspection Status:</strong> {" "}
-            <span className={`status ${statusClass}`}>
+          <div className="flex justify-between items-center">
+            <strong className="text-white">Inspection Status:</strong> 
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}>
               {statusLabels[inspectionStatus] || inspectionStatus}
             </span>
           </div>
           {vehicle.lastInspection?.inspectedAt && (
-            <div className="vehicle-summary-row">
-              <strong>Last Inspected:</strong> {formatDate(vehicle.lastInspection.inspectedAt)}
+            <div className="flex justify-between items-center">
+              <strong className="text-white">Last Inspected:</strong> 
+              <span className="text-gray-300">{formatDate(vehicle.lastInspection.inspectedAt)}</span>
             </div>
           )}
           {vehicle.lastInspection?.decision && (
-            <div className="vehicle-summary-row">
-              <strong>Last Decision:</strong> {" "}
-              <span className={`status status-${vehicle.lastInspection.decision}`}>
+            <div className="flex justify-between items-center">
+              <strong className="text-white">Last Decision:</strong> 
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                vehicle.lastInspection.decision === "available" ? "bg-green-500/20 text-green-300" :
+                vehicle.lastInspection.decision === "needs_maintenance" ? "bg-red-500/20 text-red-300" :
+                "bg-yellow-500/20 text-yellow-300"
+              }`}>
                 {decisionLabels[vehicle.lastInspection.decision] || vehicle.lastInspection.decision}
               </span>
             </div>
           )}
           {vehicle.lastInspection?.issues && (
-            <div className="vehicle-summary-row">
-              <strong>Recorded Issues:</strong> {vehicle.lastInspection.issues}
+            <div className="flex justify-between items-center">
+              <strong className="text-white">Recorded Issues:</strong> 
+              <span className="text-gray-300">{vehicle.lastInspection.issues}</span>
             </div>
           )}
         </>
       ) : (
-        <p className="muted">No matching vehicle found yet.</p>
+        <p className="text-gray-400 text-center">No matching vehicle found yet.</p>
       )}
     </div>
   );
@@ -188,11 +233,11 @@ function AttachmentEditor({ label, items, onChange, disabled }) {
   };
 
   return (
-    <section className="form-section">
-      <header className="form-section-header">
-        <h4>{label}</h4>
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-white font-semibold">{label}</h4>
         <button
-          className="btn btn-secondary"
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           type="button"
           onClick={() => {
             if (disabled) return;
@@ -202,24 +247,26 @@ function AttachmentEditor({ label, items, onChange, disabled }) {
         >
           Add
         </button>
-      </header>
-      {items.length === 0 && <p className="muted">No {label.toLowerCase()} added.</p>}
+      </div>
+      {items.length === 0 && <p className="text-gray-400">No {label.toLowerCase()} added.</p>}
       {items.map((item, index) => (
-        <div className="form-row" key={`${label}-${index}`}>
+        <div className="flex gap-4 items-start" key={`${label}-${index}`}>
           <input
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
             placeholder="Label"
             value={item.label || ""}
             onChange={(event) => handleChange(index, "label", event.target.value)}
             disabled={disabled}
           />
           <input
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
             placeholder="URL"
             value={item.url || ""}
             onChange={(event) => handleChange(index, "url", event.target.value)}
             disabled={disabled}
           />
           <button
-            className="btn btn-text"
+            className="text-red-400 hover:text-red-300 px-3 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50"
             type="button"
             onClick={() => {
               if (disabled) return;
@@ -247,24 +294,26 @@ function ChecklistEditor({ checklist, onChange, disabled }) {
   };
 
   return (
-    <section className="form-section">
-      <h4>Inspection Checklist</h4>
-      <div className="checklist-grid">
+    <section className="space-y-6">
+      <h4 className="text-white font-semibold">Inspection Checklist</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {CHECKLIST_ITEMS.map((item) => (
-          <div className="checklist-item" key={item.key}>
-            <label>
-              <span>{item.label}</span>
+          <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 space-y-3" key={item.key}>
+            <label className="block space-y-2">
+              <span className="text-white font-medium">{item.label}</span>
               <select
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                 value={checklist[item.key]?.status || "pending"}
                 onChange={(event) => handleStatusChange(item.key, event.target.value)}
                 disabled={disabled}
               >
-                <option value="pending">Pending</option>
-                <option value="pass">Pass</option>
-                <option value="fail">Fail</option>
+                <option value="pending" className="bg-gray-800">Pending</option>
+                <option value="pass" className="bg-gray-800">Pass</option>
+                <option value="fail" className="bg-gray-800">Fail</option>
               </select>
             </label>
             <textarea
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent resize-none disabled:opacity-50"
               placeholder="Notes"
               rows={2}
               value={checklist[item.key]?.notes || ""}
@@ -280,29 +329,33 @@ function ChecklistEditor({ checklist, onChange, disabled }) {
 
 function HistoryPanel({ entries, isLoading }) {
   return (
-    <section className="panel inspector-panel">
-      <header className="panel-header">
-        <h3>Inspection History</h3>
+    <section className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+      <header className="mb-6">
+        <h3 className="text-xl font-bold text-white">Inspection History</h3>
       </header>
-      {isLoading && <p>Loading history...</p>}
-      {!isLoading && entries.length === 0 && <p>No inspection history available.</p>}
+      {isLoading && <p className="text-gray-400">Loading history...</p>}
+      {!isLoading && entries.length === 0 && <p className="text-gray-400">No inspection history available.</p>}
       {!isLoading && entries.length > 0 && (
-        <ul className="timeline">
+        <div className="space-y-4">
           {entries.map((entry) => (
-            <li key={entry._id}>
-              <div className="timeline-header">
-                <strong>{formatDate(entry.completedAt || entry.createdAt)}</strong>
-                <span className={`status status-${entry.decision}`}>
+            <div key={entry._id} className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+              <div className="flex justify-between items-center mb-2">
+                <strong className="text-white">{formatDate(entry.completedAt || entry.createdAt)}</strong>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  entry.decision === "available" ? "bg-green-500/20 text-green-300" :
+                  entry.decision === "needs_maintenance" ? "bg-red-500/20 text-red-300" :
+                  "bg-yellow-500/20 text-yellow-300"
+                }`}>
                   {decisionLabels[entry.decision] || entry.decision}
                 </span>
               </div>
-              <div className="timeline-body">
+              <div className="space-y-1 text-gray-300">
                 <p>Inspector: {entry.inspector?.profile?.firstName || ""} {entry.inspector?.profile?.lastName || ""}</p>
                 {entry.notes && <p>Notes: {entry.notes}</p>}
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </section>
   );
@@ -317,23 +370,27 @@ function AssignmentsPanel({
   activeInspectionId,
 }) {
   return (
-    <section className="panel inspector-panel">
-      <header className="panel-header">
+    <section className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+      <header className="flex items-center justify-between mb-6">
         <div>
-          <h3>My inspections</h3>
-          <p className="panel-subtitle">Switch between vehicles you are handling</p>
+          <h3 className="text-xl font-bold text-white">My inspections</h3>
+          <p className="text-gray-400">Switch between vehicles you are handling</p>
         </div>
-        <button type="button" className="btn btn-secondary" onClick={onCreateNew}>
+        <button 
+          type="button" 
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+          onClick={onCreateNew}
+        >
           New manual inspection
         </button>
       </header>
-      {error && <p className="error-text">{error}</p>}
+      {error && <p className="text-red-400 mb-4">{error}</p>}
       {isLoading ? (
-        <p>Loading assignments...</p>
+        <p className="text-gray-400">Loading assignments...</p>
       ) : assignments.length === 0 ? (
-        <p className="muted">No active assignments. Start a manual inspection to begin.</p>
+        <p className="text-gray-400">No active assignments. Start a manual inspection to begin.</p>
       ) : (
-        <ul className="list compact">
+        <div className="space-y-3">
           {assignments.map((item) => {
             const vehicle = item.vehicle || {};
             const title = `${vehicle.basicInfo?.make || ""} ${vehicle.basicInfo?.model || ""}`.trim() ||
@@ -343,27 +400,31 @@ function AssignmentsPanel({
             const statusLabel = statusLabels[item.status] || item.status || "-";
             const decisionLabel = decisionLabels[item.decision] || item.decision || "";
             return (
-              <li key={item._id} className="list-item assignment-item">
-                <div>
-                  <strong>{title}</strong>
-                  <p>Plate: {plate || "-"}</p>
-                  <p className="muted">
+              <div key={item._id} className="flex items-center justify-between bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                <div className="flex-1">
+                  <strong className="text-white block">{title}</strong>
+                  <p className="text-gray-300">Plate: {plate || "-"}</p>
+                  <p className="text-gray-400 text-sm">
                     {statusLabel}
                     {decisionLabel && decisionLabel !== "Pending" ? ` · ${decisionLabel}` : ""}
                   </p>
                 </div>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                    isActive 
+                      ? 'bg-[#FF5A00] text-white cursor-default' 
+                      : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  }`}
                   onClick={() => onSelect?.(item)}
                   disabled={isActive}
                 >
                   {isActive ? "Active" : "Open"}
                 </button>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       )}
     </section>
   );
@@ -402,6 +463,13 @@ function InspectorDashboard() {
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   const [assignmentsError, setAssignmentsError] = useState("");
   const [actionBusyId, setActionBusyId] = useState(null);
+
+  // Vehicle approval states
+  const [pendingVehicles, setPendingVehicles] = useState([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const [vehiclesError, setVehiclesError] = useState("");
+  const [approvalModal, setApprovalModal] = useState(null);
+  const [vehicleSearchTerm, setVehicleSearchTerm] = useState("");
 
   const heroMetrics = useMemo(() => {
     const records = Array.isArray(inspectionRecords) ? inspectionRecords : [];
@@ -553,6 +621,40 @@ function InspectorDashboard() {
       setIsLoadingAssignments(false);
     }
   }, [inspectorId]);
+
+  const loadPendingVehicles = useCallback(async () => {
+    setIsLoadingVehicles(true);
+    setVehiclesError("");
+    try {
+      const data = await getPendingVehicles();
+      console.log('Loaded pending vehicles:', data);
+      setPendingVehicles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading pending vehicles:', error);
+      setVehiclesError(error.message);
+    } finally {
+      setIsLoadingVehicles(false);
+    }
+  }, []);
+
+  const filteredPendingVehicles = useMemo(() => {
+    if (!vehicleSearchTerm.trim()) {
+      return pendingVehicles;
+    }
+    
+    const searchTerm = vehicleSearchTerm.toLowerCase();
+    return pendingVehicles.filter((vehicle) => {
+      const vehicleName = `${vehicle.basicInfo?.make || ""} ${vehicle.basicInfo?.model || ""} ${vehicle.basicInfo?.year || ""}`.toLowerCase();
+      const licensePlate = (vehicle.basicInfo?.licensePlate || "").toLowerCase();
+      const category = (vehicle.details?.category || "").toLowerCase();
+      
+      return (
+        vehicleName.includes(searchTerm) ||
+        licensePlate.includes(searchTerm) ||
+        category.includes(searchTerm)
+      );
+    });
+  }, [pendingVehicles, vehicleSearchTerm]);
 
   const handleCreateNewInspection = useCallback(() => {
     setActiveInspection(null);
@@ -708,6 +810,12 @@ function InspectorDashboard() {
   }, [loadAssignments]);
 
   useEffect(() => {
+    if (activeTab === "vehicles") {
+      loadPendingVehicles();
+    }
+  }, [activeTab, loadPendingVehicles]);
+
+  useEffect(() => {
     if (activeVehicle?.basicInfo?.licensePlate) {
       setLicensePlate(activeVehicle.basicInfo.licensePlate);
     }
@@ -752,6 +860,57 @@ function InspectorDashboard() {
       safetyConcerns: activeInspection.safetyConcerns || "",
     });
   }, [activeInspection]);
+
+  const handleLicensePlateChange = useCallback(async (plateValue) => {
+    const normalizedPlate = plateValue.trim().toUpperCase();
+    setLicensePlate(normalizedPlate);
+
+    if (normalizedPlate.length >= 3) { // Start searching after 3 characters
+      try {
+        // Try to find vehicle by license plate
+        const data = await startManualVehicleInspection({
+          licensePlate: normalizedPlate,
+          inspectorId,
+          checklist: createEmptyChecklist(),
+          notes: "",
+        });
+
+        if (data.vehicle && data.inspection) {
+          setActiveVehicle(data.vehicle);
+          setActiveInspection(data.inspection);
+          
+          // Auto-fill form with vehicle data
+          const vehicle = data.vehicle;
+          const inspection = data.inspection;
+          
+          setFormState(prev => ({
+            ...prev,
+            mileage: vehicle.details?.mileage || inspection.mileage || "",
+            generalCondition: vehicle.details?.condition || "",
+            exteriorCondition: vehicle.details?.exteriorCondition || "",
+            interiorCondition: vehicle.details?.interiorCondition || "",
+            fuelLevel: vehicle.details?.fuelLevel || "",
+            checklist: mergeChecklistState(inspection.checklist),
+            notes: inspection.notes || "",
+            photos: inspection.photos || [],
+            documents: inspection.documents || [],
+            inspectionLocation: inspection.inspectionLocation || "",
+            weatherConditions: inspection.weatherConditions || "",
+            safetyConcerns: inspection.safetyConcerns || "",
+          }));
+
+          if (vehicle._id) {
+            loadHistory(vehicle._id);
+          }
+        }
+      } catch (error) {
+        // If vehicle not found or error occurs, don't show error for partial searches
+        if (normalizedPlate.length > 5) { // Only show error for complete plate numbers
+          console.log('Vehicle lookup failed:', error.message);
+        }
+      }
+    }
+  }, [inspectorId, loadHistory]);
 
   const handleSubmit = async (action) => {
     if (!inspectorId) {
@@ -882,11 +1041,39 @@ function InspectorDashboard() {
     }
   };
 
+  const handleApproveVehicle = useCallback(async (vehicleId, notes = "") => {
+    try {
+      setActionBusyId(`approve:${vehicleId}`);
+      await approveVehicle(vehicleId, notes);
+      setFeedback({ type: "success", message: "Vehicle approved successfully" });
+      loadPendingVehicles();
+      setApprovalModal(null);
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message });
+    } finally {
+      setActionBusyId(null);
+    }
+  }, [loadPendingVehicles]);
+
+  const handleRejectVehicle = useCallback(async (vehicleId, reason = "") => {
+    try {
+      setActionBusyId(`reject:${vehicleId}`);
+      await rejectVehicle(vehicleId, reason);
+      setFeedback({ type: "success", message: "Vehicle rejected successfully" });
+      loadPendingVehicles();
+      setApprovalModal(null);
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message });
+    } finally {
+      setActionBusyId(null);
+    }
+  }, [loadPendingVehicles]);
+
   const isCompletedInspection = activeInspection?.status === "completed";
   const formDisabled = false;
 
   return (
-    <div className="inspector-dashboard">
+    <div className="flex min-h-screen bg-gradient-to-br from-black to-gray-900">
       <InspectorNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -894,49 +1081,57 @@ function InspectorDashboard() {
         onLogout={logout}
       />
 
-      <main className="inspector-main">
+      <main className="flex-1 p-6 min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
         <InspectorHero activeTab={activeTab} user={user} metrics={heroMetrics} />
 
         {feedback && (
-          <div
-            className={`inspector-alert ${
-              feedback.type === "error" ? "inspector-alert--error" : "inspector-alert--success"
-            }`}
-          >
-            <span>{feedback.message}</span>
-            <button type="button" className="btn btn-text" onClick={() => setFeedback(null)}>
-              Dismiss
-            </button>
+          <div className={`rounded-xl p-4 mb-6 ${
+            feedback.type === "error" 
+              ? "bg-red-500/20 border border-red-500/30 text-red-300" 
+              : "bg-green-500/20 border border-green-500/30 text-green-300"
+          }`}>
+            <div className="flex items-center justify-between">
+              <span>{feedback.message}</span>
+              <button 
+                type="button" 
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+                onClick={() => setFeedback(null)}
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         )}
 
+        <div className="space-y-6">{/* Content wrapper for consistent spacing */}
+
         {activeTab === "overview" && (
           <>
-            <section className="inspector-highlight-grid" aria-label="Key inspector metrics">
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="Key inspector metrics">
               {overviewCards.map((card) => (
-                <article key={card.title} className="inspector-highlight-card">
-                  <p className="inspector-highlight-label">{card.title}</p>
-                  <p className="inspector-highlight-value">{card.value}</p>
-                  <p className="inspector-highlight-hint">{card.hint}</p>
+                <article key={card.title} className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                  <p className="text-gray-400 text-sm font-medium mb-2">{card.title}</p>
+                  <p className="text-3xl font-bold text-white mb-1">{card.value}</p>
+                  <p className="text-gray-500 text-sm">{card.hint}</p>
                 </article>
               ))}
             </section>
 
-            <div className="inspector-grid inspector-grid--balanced">
-              <section className="panel inspector-panel">
-                <header className="panel-header">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <section className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+                <header className="flex items-center justify-between mb-6">
                   <div>
-                    <h3>Active inspection</h3>
-                    <p className="panel-subtitle">
+                    <h3 className="text-xl font-bold text-white">Active inspection</h3>
+                    <p className="text-gray-400">
                       {activeVehicle
                         ? `${activeVehicle.basicInfo?.make || ""} ${activeVehicle.basicInfo?.model || ""}`.trim() ||
-                          "Vehicle details loaded"
+                        "Vehicle details loaded"
                         : "Jump into the workspace to start a new report"}
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                     onClick={() => setActiveTab("inspections")}
                   >
                     Open workspace
@@ -946,52 +1141,59 @@ function InspectorDashboard() {
               </section>
             </div>
 
-            <AssignmentsPanel
-              assignments={assignments}
-              onSelect={handleSelectAssignment}
-              onCreateNew={handleCreateNewInspection}
-              isLoading={isLoadingAssignments}
-              error={assignmentsError}
-              activeInspectionId={activeInspection?._id}
-            />
-
-            <HistoryPanel entries={history} isLoading={isLoadingHistory} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AssignmentsPanel
+                assignments={assignments}
+                onSelect={handleSelectAssignment}
+                onCreateNew={handleCreateNewInspection}
+                isLoading={isLoadingAssignments}
+                error={assignmentsError}
+                activeInspectionId={activeInspection?._id}
+              />
+              <HistoryPanel entries={history} isLoading={isLoadingHistory} />
+            </div>
           </>
         )}
 
         {activeTab === "inspections" && (
-          <div className="inspector-grid inspector-grid--split">
-            <section className="panel inspector-panel inspector-panel--stretch">
-              <header className="panel-header">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <section className="xl:col-span-2 bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+              <header className="flex items-center justify-between mb-6">
                 <div>
-                  <h3>Inspection workspace</h3>
-                  <p className="panel-subtitle">
+                  <h3 className="text-xl font-bold text-white">Inspection workspace</h3>
+                  <p className="text-gray-400">
                     {activeVehicle
                       ? `${activeVehicle.basicInfo?.make || ""} ${activeVehicle.basicInfo?.model || ""}`.trim() ||
-                        "Vehicle details loaded"
+                      "Vehicle details loaded"
                       : "Enter vehicle details and capture findings"}
                   </p>
                 </div>
-                {isCompletedInspection && <span className="inspector-status-tag">Completed</span>}
+                {isCompletedInspection && (
+                  <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
+                    Completed
+                  </span>
+                )}
               </header>
 
               <VehicleSummary vehicle={activeVehicle} enteredPlate={licensePlate} />
 
-              <form className="form-panel inspector-form" onSubmit={(event) => event.preventDefault()}>
-                <label>
-                  License Plate
+              <form className="space-y-6 mt-6" onSubmit={(event) => event.preventDefault()}>
+                <label className="block space-y-2">
+                  <span className="text-white font-medium">License Plate</span>
                   <input
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                     value={licensePlate}
-                    onChange={(event) => setLicensePlate(event.target.value.toUpperCase())}
-                    placeholder="e.g. ABC-1234"
+                    onChange={(event) => handleLicensePlateChange(event.target.value)}
+                    placeholder="e.g. ABC-1234 (auto-fills form when found)"
                     disabled={formDisabled}
                   />
                 </label>
 
-                <div className="form-row">
-                  <label>
-                    Status
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block space-y-2">
+                    <span className="text-white font-medium">Status</span>
                     <input
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
                       value={
                         statusLabels[activeInspection?.status] ||
                         (activeInspection ? activeInspection.status : "Not started")
@@ -999,9 +1201,10 @@ function InspectorDashboard() {
                       disabled
                     />
                   </label>
-                  <label>
-                    Decision
+                  <label className="block space-y-2">
+                    <span className="text-white font-medium">Decision</span>
                     <input
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-400 cursor-not-allowed"
                       value={
                         decisionLabels[activeInspection?.decision] ||
                         (activeInspection ? activeInspection.decision : "Pending")
@@ -1011,25 +1214,30 @@ function InspectorDashboard() {
                   </label>
                 </div>
 
-                <label>
-                  Current Mileage (km)
-                  <input
-                    type="number"
-                    value={formState.mileage}
-                    onChange={(event) =>
-                      setFormState((prev) => ({ ...prev, mileage: event.target.value }))
-                    }
-                    disabled={formDisabled}
-                    min={0}
-                  />
-                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block space-y-2">
+                    <span className="text-white font-medium">Mileage</span>
+                    <input
+                      type="number"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
+                      value={formState.mileage}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, mileage: event.target.value }))
+                      }
+                      disabled={formDisabled}
+                      placeholder="Current mileage"
+                      min="0"
+                    />
+                  </label>
+                </div>
 
-                <section className="form-section">
-                  <h4>Inspection Context</h4>
-                  <div className="form-row">
-                    <label>
-                      Inspection Location
+                <section className="space-y-4">
+                  <h4 className="text-white font-semibold">Inspection Context</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Inspection Location</span>
                       <input
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.inspectionLocation}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, inspectionLocation: event.target.value }))
@@ -1038,9 +1246,10 @@ function InspectorDashboard() {
                         placeholder="Garage, yard, on-site etc."
                       />
                     </label>
-                    <label>
-                      Weather Conditions
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Weather Conditions</span>
                       <input
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.weatherConditions}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, weatherConditions: event.target.value }))
@@ -1051,10 +1260,11 @@ function InspectorDashboard() {
                     </label>
                   </div>
 
-                  <div className="form-row">
-                    <label>
-                      Fuel Level
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Fuel Level</span>
                       <select
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.fuelLevel}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, fuelLevel: event.target.value }))
@@ -1068,9 +1278,10 @@ function InspectorDashboard() {
                         ))}
                       </select>
                     </label>
-                    <label>
-                      Overall Condition
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Overall Condition</span>
                       <select
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.generalCondition}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, generalCondition: event.target.value }))
@@ -1086,10 +1297,11 @@ function InspectorDashboard() {
                     </label>
                   </div>
 
-                  <div className="form-row">
-                    <label>
-                      Exterior Condition
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Exterior Condition</span>
                       <select
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.exteriorCondition}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, exteriorCondition: event.target.value }))
@@ -1103,9 +1315,10 @@ function InspectorDashboard() {
                         ))}
                       </select>
                     </label>
-                    <label>
-                      Interior Condition
+                    <label className="block space-y-2">
+                      <span className="text-white font-medium">Interior Condition</span>
                       <select
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent disabled:opacity-50"
                         value={formState.interiorCondition}
                         onChange={(event) =>
                           setFormState((prev) => ({ ...prev, interiorCondition: event.target.value }))
@@ -1130,9 +1343,10 @@ function InspectorDashboard() {
                   disabled={formDisabled}
                 />
 
-                <label>
-                  Safety Concerns
+                <label className="block space-y-2">
+                  <span className="text-white font-medium">Safety Concerns</span>
                   <textarea
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent resize-none disabled:opacity-50"
                     rows={3}
                     value={formState.safetyConcerns}
                     onChange={(event) =>
@@ -1143,9 +1357,10 @@ function InspectorDashboard() {
                   />
                 </label>
 
-                <label>
-                  Notes
+                <label className="block space-y-2">
+                  <span className="text-white font-medium">Notes</span>
                   <textarea
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent resize-none disabled:opacity-50"
                     rows={4}
                     value={formState.notes}
                     onChange={(event) =>
@@ -1169,9 +1384,9 @@ function InspectorDashboard() {
                   disabled={formDisabled}
                 />
 
-                <div className="form-actions inspector-form__actions">
+                <div className="flex flex-wrap gap-4 pt-6">
                   <button
-                    className="btn btn-secondary"
+                    className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     type="button"
                     disabled={formDisabled}
                     onClick={() => handleSubmit("save")}
@@ -1179,7 +1394,7 @@ function InspectorDashboard() {
                     Save Progress
                   </button>
                   <button
-                    className="btn"
+                    className="bg-[#FF5A00] hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     type="button"
                     disabled={formDisabled}
                     onClick={() => handleSubmit("approve")}
@@ -1187,7 +1402,7 @@ function InspectorDashboard() {
                     Mark Available
                   </button>
                   <button
-                    className="btn btn-danger"
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     type="button"
                     disabled={formDisabled}
                     onClick={() => handleSubmit("reject")}
@@ -1198,7 +1413,7 @@ function InspectorDashboard() {
               </form>
             </section>
 
-            <div className="panel-stack inspector-stack">
+            <div className="space-y-6">
               <AssignmentsPanel
                 assignments={assignments}
                 onSelect={handleSelectAssignment}
@@ -1217,14 +1432,14 @@ function InspectorDashboard() {
         )}
 
         {activeTab === "records" && (
-          <section className="panel inspector-panel">
-            <header className="panel-header">
+          <section className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <header className="flex items-center justify-between mb-6">
               <div>
-                <h3>Inspection reports</h3>
-                <p className="panel-subtitle">Search, export, and audit inspection activity</p>
+                <h3 className="text-xl font-bold text-white">Inspection reports</h3>
+                <p className="text-gray-400">Search, export, and audit inspection activity</p>
               </div>
               <button
-                className="btn btn-secondary"
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
                 onClick={handleDownloadReports}
                 disabled={recordsLoading || inspectionRecords.length === 0}
@@ -1234,15 +1449,16 @@ function InspectorDashboard() {
             </header>
 
             <form
-              className="filter-grid compact"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
               onSubmit={(event) => {
                 event.preventDefault();
                 setRecordFilters(recordFiltersDraft);
               }}
             >
-              <label>
-                License Plate
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">License Plate</span>
                 <input
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="plate"
                   value={recordFiltersDraft.plate}
                   onChange={(event) =>
@@ -1251,9 +1467,10 @@ function InspectorDashboard() {
                   placeholder="e.g. ABC-1234"
                 />
               </label>
-              <label>
-                Status
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">Status</span>
                 <select
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="status"
                   value={recordFiltersDraft.status}
                   onChange={(event) =>
@@ -1267,9 +1484,10 @@ function InspectorDashboard() {
                   ))}
                 </select>
               </label>
-              <label>
-                Decision
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">Decision</span>
                 <select
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="decision"
                   value={recordFiltersDraft.decision}
                   onChange={(event) =>
@@ -1283,9 +1501,10 @@ function InspectorDashboard() {
                   ))}
                 </select>
               </label>
-              <label>
-                Category
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">Category</span>
                 <select
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="category"
                   value={recordFiltersDraft.category}
                   onChange={(event) =>
@@ -1299,32 +1518,36 @@ function InspectorDashboard() {
                   ))}
                 </select>
               </label>
-              <label>
-                From date
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">From date</span>
                 <input
                   type="date"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="from"
                   value={recordFiltersDraft.from}
+                  max={getTodayDate()}
                   onChange={(event) =>
                     setRecordFiltersDraft((prev) => ({ ...prev, from: event.target.value }))
                   }
                 />
               </label>
-              <label>
-                To date
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">To date</span>
                 <input
                   type="date"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
                   name="to"
                   value={recordFiltersDraft.to}
+                  max={getTodayDate()}
                   onChange={(event) =>
                     setRecordFiltersDraft((prev) => ({ ...prev, to: event.target.value }))
                   }
                 />
               </label>
-              <div className="filter-actions">
+              <div className="flex items-end gap-2">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                   onClick={() => {
                     setRecordFiltersDraft(INITIAL_RECORD_FILTERS);
                     setRecordFilters(INITIAL_RECORD_FILTERS);
@@ -1332,29 +1555,29 @@ function InspectorDashboard() {
                 >
                   Reset
                 </button>
-                <button className="btn" type="submit">
+                <button className="bg-[#FF5A00] hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" type="submit">
                   Apply
                 </button>
               </div>
             </form>
-            {recordsError && <p className="error-text">{recordsError}</p>}
+            {recordsError && <p className="text-red-400 mb-4">{recordsError}</p>}
             {recordsLoading ? (
-              <p>Loading inspection records...</p>
+              <p className="text-gray-400">Loading inspection records...</p>
             ) : inspectionRecords.length === 0 ? (
-              <p className="muted">No inspection records match the current filters.</p>
+              <p className="text-gray-400">No inspection records match the current filters.</p>
             ) : (
-              <div className="table-wrapper">
-                <table className="inspection-table">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr>
-                      <th>Plate</th>
-                      <th>Vehicle</th>
-                      <th>Category</th>
-                      <th>Status</th>
-                      <th>Decision</th>
-                      <th>Inspected</th>
-                      <th>Inspector</th>
-                      <th>Actions</th>
+                    <tr className="bg-gray-900/50">
+                      <th className="px-4 py-3 text-left text-white font-semibold">Plate</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Vehicle</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Category</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Status</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Decision</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Inspected</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Inspector</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1366,36 +1589,53 @@ function InspectorDashboard() {
                       const editBusy = actionBusyId === `edit:${record._id}`;
                       const deleteBusy = actionBusyId === `delete:${record._id}`;
                       return (
-                        <tr key={record._id}>
-                          <td>{plate || "-"}</td>
-                          <td>{vehicleName || "-"}</td>
-                          <td>{vehicle.details?.category || "-"}</td>
-                          <td>{statusLabels[record.status] || record.status}</td>
-                          <td>{decisionLabels[record.decision] || record.decision}</td>
-                          <td>{formatDate(inspectedAt)}</td>
-                          <td>
+                        <tr key={record._id} className="border-b border-gray-700 hover:bg-gray-900/30">
+                          <td className="px-4 py-3 text-gray-300">{plate || "-"}</td>
+                          <td className="px-4 py-3 text-gray-300">{vehicleName || "-"}</td>
+                          <td className="px-4 py-3 text-gray-300">{vehicle.details?.category || "-"}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              record.status === "completed" ? "bg-green-500/20 text-green-300" :
+                              record.status === "in_progress" ? "bg-yellow-500/20 text-yellow-300" :
+                              "bg-gray-500/20 text-gray-300"
+                            }`}>
+                              {statusLabels[record.status] || record.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              record.decision === "available" ? "bg-green-500/20 text-green-300" :
+                              record.decision === "needs_maintenance" ? "bg-red-500/20 text-red-300" :
+                              "bg-yellow-500/20 text-yellow-300"
+                            }`}>
+                              {decisionLabels[record.decision] || record.decision}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-300">{formatDate(inspectedAt)}</td>
+                          <td className="px-4 py-3 text-gray-300">
                             {record.inspector?.profile
                               ? `${record.inspector.profile.firstName} ${record.inspector.profile.lastName}`
                               : "-"}
                           </td>
-                          <td className="inspection-actions">
-                            <button
-                              type="button"
-                              className="btn btn-text"
-                              onClick={() => handleEditInspectionRecord(record._id)}
-                              disabled={editBusy || deleteBusy}
-                            >
-                              {editBusy ? "Opening..." : "Edit"}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-text"
-                              style={{ color: "#dc2626" }}
-                              onClick={() => handleDeleteInspectionRecord(record)}
-                              disabled={editBusy || deleteBusy}
-                            >
-                              {deleteBusy ? "Deleting..." : "Delete"}
-                            </button>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                className="text-[#FF5A00] hover:text-orange-400 transition-colors duration-200 disabled:opacity-50"
+                                onClick={() => handleEditInspectionRecord(record._id)}
+                                disabled={editBusy || deleteBusy}
+                              >
+                                {editBusy ? "Opening..." : "Edit"}
+                              </button>
+                              <button
+                                type="button"
+                                className="text-red-400 hover:text-red-300 transition-colors duration-200 disabled:opacity-50"
+                                onClick={() => handleDeleteInspectionRecord(record)}
+                                disabled={editBusy || deleteBusy}
+                              >
+                                {deleteBusy ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1407,6 +1647,225 @@ function InspectorDashboard() {
           </section>
         )}
 
+        {activeTab === "vehicles" && (
+          <section className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <header className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white">Vehicle Approval</h3>
+                <p className="text-gray-400">Review and approve vehicles submitted by owners</p>
+              </div>
+              <div className="bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-medium">
+                {filteredPendingVehicles.length} Pending
+              </div>
+            </header>
+
+            {/* Search Filter */}
+            <div className="mb-6">
+              <label className="block space-y-2">
+                <span className="text-white font-medium text-sm">Search Vehicles</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 pr-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent"
+                    placeholder="Search by vehicle, license plate, or category..."
+                    value={vehicleSearchTerm}
+                    onChange={(e) => setVehicleSearchTerm(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                {vehicleSearchTerm && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">
+                      Showing {filteredPendingVehicles.length} of {pendingVehicles.length} vehicles
+                    </span>
+                    <button
+                      type="button"
+                      className="text-[#FF5A00] hover:text-orange-400 transition-colors duration-200"
+                      onClick={() => setVehicleSearchTerm("")}
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            {vehiclesError && <p className="text-red-400 mb-4">{vehiclesError}</p>}
+
+            {isLoadingVehicles ? (
+              <p className="text-gray-400">Loading pending vehicles...</p>
+            ) : filteredPendingVehicles.length === 0 ? (
+              <p className="text-gray-400">
+                {vehicleSearchTerm ? "No vehicles match your search criteria." : "No vehicles pending approval."}
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-900/50">
+                      <th className="px-4 py-3 text-left text-white font-semibold">Vehicle</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Plate</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Category</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Condition</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Daily Rate</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Location</th>
+                      <th className="px-4 py-3 text-left text-white font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPendingVehicles.map((vehicle) => {
+                      const vehicleName = `${vehicle.basicInfo?.make || ""} ${vehicle.basicInfo?.model || ""} (${vehicle.basicInfo?.year || ""})`.trim();
+                      const approveBusy = actionBusyId === `approve:${vehicle._id}`;
+                      const rejectBusy = actionBusyId === `reject:${vehicle._id}`;
+                      return (
+                        <tr key={vehicle._id} className="border-b border-gray-700 hover:bg-gray-900/30">
+                          <td className="px-4 py-3">
+                            <div>
+                              <div className="text-white font-medium">{vehicleName}</div>
+                              <div className="text-gray-400 text-sm">
+                                {vehicle.details?.fuelType} • {vehicle.details?.transmission}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-300">{vehicle.basicInfo?.licensePlate || "N/A"}</td>
+                          <td className="px-4 py-3 text-gray-300">{vehicle.details?.category || "N/A"}</td>
+                          <td className="px-4 py-3 text-gray-300">{vehicle.details?.condition || "N/A"}</td>
+                          <td className="px-4 py-3 text-gray-300">
+                            {vehicle.pricing?.currency} {vehicle.pricing?.dailyRate || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-300">
+                            {vehicle.location?.city ? `${vehicle.location.city}` : "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full text-xs font-medium">
+                              {vehicle.status === "pending" ? "Pending Approval" : vehicle.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Approval Modal */}
+            {approvalModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 w-full max-w-md">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-xl font-bold text-white">
+                      {approvalModal.type === "approve" ? "Approve" : "Reject"} Vehicle
+                    </h4>
+                    <button
+                      type="button"
+                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                      onClick={() => setApprovalModal(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-gray-300">
+                      {approvalModal.type === "approve"
+                        ? "Are you sure you want to approve this vehicle?"
+                        : "Please provide a reason for rejecting this vehicle:"}
+                    </p>
+
+                    <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                      <strong className="text-white">
+                        {approvalModal.vehicle.basicInfo?.make} {approvalModal.vehicle.basicInfo?.model} ({approvalModal.vehicle.basicInfo?.year})
+                      </strong>
+                      <br />
+                      <span className="text-gray-400">License: {approvalModal.vehicle.basicInfo?.licensePlate}</span>
+                    </div>
+
+                    {approvalModal.type === "approve" ? (
+                      <div>
+                        <label className="block space-y-2">
+                          <span className="text-white font-medium text-sm">Approval Notes (Optional):</span>
+                          <textarea
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent resize-none"
+                            rows={3}
+                            placeholder="Add any inspection notes..."
+                            value={approvalModal.notes || ""}
+                            onChange={(e) => setApprovalModal(prev => ({ ...prev, notes: e.target.value }))}
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block space-y-2">
+                          <span className="text-white font-medium text-sm">Rejection Reason *:</span>
+                          <textarea
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-transparent resize-none"
+                            rows={4}
+                            placeholder="Please explain why this vehicle is being rejected..."
+                            value={approvalModal.reason || ""}
+                            onChange={(e) => setApprovalModal(prev => ({ ...prev, reason: e.target.value }))}
+                            required
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      type="button"
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                      onClick={() => setApprovalModal(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors duration-200 ${
+                        approvalModal.type === "approve" 
+                          ? "bg-green-600 hover:bg-green-700 text-white" 
+                          : "bg-red-600 hover:bg-red-700 text-white"
+                      } disabled:opacity-50`}
+                      onClick={() => {
+                        if (approvalModal.type === "approve") {
+                          handleApproveVehicle(approvalModal.vehicle._id, approvalModal.notes || "");
+                        } else {
+                          if (!approvalModal.reason?.trim()) {
+                            alert("Please provide a reason for rejection");
+                            return;
+                          }
+                          handleRejectVehicle(approvalModal.vehicle._id, approvalModal.reason);
+                        }
+                      }}
+                      disabled={
+                        actionBusyId === `approve:${approvalModal.vehicle._id}` ||
+                        actionBusyId === `reject:${approvalModal.vehicle._id}` ||
+                        (approvalModal.type === "reject" && !approvalModal.reason?.trim())
+                      }
+                    >
+                      {approvalModal.type === "approve" ? "Approve Vehicle" : "Reject Vehicle"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === "profile" && (
+          <ProfilePage 
+            user={user} 
+            onProfileUpdate={(updatedUser) => {
+              console.log('Profile updated:', updatedUser);
+            }} 
+          />
+        )}
+
+        </div>{/* End content wrapper */}
       </main>
     </div>
   );

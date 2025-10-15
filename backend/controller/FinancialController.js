@@ -330,6 +330,134 @@ export async function processPayments(req, res) {
   }
 }
 
+// Get all paid financial records including all roles
+export async function getAllPaidFinancials(req, res) {
+  try {
+    const { page = 1, limit = 10, role, month, year } = req.query;
+    
+    const filter = { status: "paid" };
+    if (role) filter.recipientType = role;
+    if (month && year) {
+      filter["period.month"] = parseInt(month);
+      filter["period.year"] = parseInt(year);
+    }
+
+    const paidFinancials = await Financial.find(filter)
+      .populate("recipientId", "profile firstName lastName email")
+      .sort({ paymentDate: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Financial.countDocuments(filter);
+
+    // Calculate totals by role
+    const totalsByRole = await Financial.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: "$recipientType",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      financials: paidFinancials,
+      totalsByRole,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      total
+    });
+  } catch (error) {
+    console.error("Error fetching paid financials:", error);
+    res.status(500).json({ message: "Failed to fetch paid financials", error: error.message });
+  }
+}
+
+// Get financial statistics
+export async function getFinancialStats(req, res) {
+  try {
+    const { month, year } = req.query;
+    const currentMonth = month ? parseInt(month) : new Date().getMonth() + 1;
+    const currentYear = year ? parseInt(year) : new Date().getFullYear();
+
+    const stats = await Financial.aggregate([
+      {
+        $match: {
+          "period.month": currentMonth,
+          "period.year": currentYear
+        }
+      },
+      {
+        $group: {
+          _id: {
+            type: "$type",
+            recipientType: "$recipientType",
+            status: "$status"
+          },
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.recipientType",
+          totalPaid: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.status", "paid"] }, "$totalAmount", 0]
+            }
+          },
+          totalPending: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.status", "pending"] }, "$totalAmount", 0]
+            }
+          },
+          paidCount: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.status", "paid"] }, "$count", 0]
+            }
+          },
+          pendingCount: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.status", "pending"] }, "$count", 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    const overallStats = await Financial.aggregate([
+      {
+        $match: {
+          "period.month": currentMonth,
+          "period.year": currentYear
+        }
+      },
+      {
+        $group: {
+          _id: "$status",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      period: { month: currentMonth, year: currentYear },
+      statsByRole: stats,
+      overallStats,
+      totals: {
+        paid: overallStats.find(s => s._id === "paid")?.totalAmount || 0,
+        pending: overallStats.find(s => s._id === "pending")?.totalAmount || 0,
+        total: overallStats.reduce((sum, s) => sum + s.totalAmount, 0)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching financial stats", error: error.message });
+  }
+}
+
 // Get financial summary
 export async function getFinancialSummary(req, res) {
   try {

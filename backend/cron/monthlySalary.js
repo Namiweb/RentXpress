@@ -8,129 +8,247 @@ import Payment from "../models/paymentModels.js";
 import Financial from "../models/Financial.js";
 
 const monthlyJob = new CronJob(
-  "0 0 1 1 * *", 
-
+  "0 0 1 1 * *", // Run at 00:00 on 1st day of every month
   async () => {
     console.log("Monthly job running at 1:00 AM on the 1st day of the month");
 
     const now = new Date();
-
-    let lastMonth = now.getMonth() + 1;
+    let lastMonth = now.getMonth(); // Current month is 0-11
     let year = now.getFullYear();
 
-    if (lastMonth === 1) {
-      lastMonth = 12; 
+    if (lastMonth === 0) {
+      lastMonth = 12;
       year -= 1;
-    } else {
-      lastMonth -= 1;
     }
 
-    const bookings = await lastMonthBookings();
-    const inspections = await lastMonthVehicleInspections();
-
-    const payableUsers = await usersToPay();
-
-    if (!payableUsers || payableUsers.length === 0) {
-      console.log("No users to process for salary payments.");
-      return;
-    }
-
-    const salaryConfigs = await getSalaryConfigs();
-
-    if (!salaryConfigs || salaryConfigs.length === 0) {
-      console.log("No salary configurations found.");
-      return;
-    }
-
-    const formattedConfigs = salaryConfigs.reduce(
-      (acc, config) => ({ ...acc, [config.role]: config }),
-      {}
-    );
-
-    console.log("Salary Configurations:", formattedConfigs);
-
-    payableUsers.forEach((user) => {
-      let totalEarnings = 0;
-      let tripCount = 0;
-
-      user.role === "inspector" 
-        ? inspections.forEach(async (inspection) => {
-          if (inspection.inspector.toString() === user._id.toString()) {
-            tripCount += 1;
-          }
-        })
-        : bookings.forEach(async (booking) => {
-          if (user.role === "driver" && booking.bookingDetails.driverId?.toString() === user._id.toString()) {
-            tripCount += 1;
-            totalEarnings += booking.bookingDetails.pricing?.amount || 0;
-          } else if (user.role === "vehicle_owner" && await checkVehicleOwner(booking.bookingDetails.vehicleId, user._id)) {
-            tripCount += 1;
-            totalEarnings += booking.bookingDetails.pricing?.amount || 0;
-          }
-        });
-
-      const config = formattedConfigs[user.role];
-
-      if (!config) {
-        console.log(`No salary configuration found for role: ${user.role}`);
+    try {
+      const payableUsers = await usersToPay();
+      if (!payableUsers || payableUsers.length === 0) {
+        console.log("No users to process for salary payments.");
         return;
       }
 
-      let salary = 0;
-      if (user.role === "driver") {
-        salary =
-          config.baseSalary +
-          (config.commissionRates.perTrip * tripCount * totalEarnings) / 100; 
-        tripCount > config.bonuses.minTripsForBonus && (salary += config.bonuses.bonusAmount);
-        (config.deductions.otherDeductions <= salary) ? salary -= config.deductions.otherDeductions : salary = 0;
-      } else if (user.role === "vehicle_owner") {
-        salary = (config.commissionRates.revenueShare * totalEarnings) / 100; 
-        tripCount > config.bonuses.minTripsForBonus && (salary += config.bonuses.bonusAmount);
-      } else if (user.role === "inspector") {
-        salary = config.baseSalary + (config.commissionRates.perInspection * tripCount); 
-        tripCount > config.bonuses.minInspectionsForBonus && (salary += config.bonuses.inspectionBonus);
+      const salaryConfigs = await getSalaryConfigs();
+      if (!salaryConfigs || salaryConfigs.length === 0) {
+        console.log("No salary configurations found.");
+        return;
       }
 
-      const taxDeduction = (config.deductions.taxRate / 100) * salary;
-      salary -= taxDeduction;
+      const formattedConfigs = salaryConfigs.reduce(
+        (acc, config) => ({ ...acc, [config.role]: config }),
+        {}
+      );
 
-      console.log(`User: ${user._id}, Role: ${user.role}, Trips/Inspections: ${tripCount}, Total Earnings: ${totalEarnings.toFixed(2)}, Calculated Salary: ${salary.toFixed(2)}`);
-
-      if (salary == 0) {
-        return
+      // Process each user
+      for (const user of payableUsers) {
+        await processUserSalary(user, lastMonth, year, formattedConfigs);
       }
 
-      let salaryData = {
-        baseSalary: config.baseSalary,
-        revenueShare:
-          (config.commissionRates.revenueShare * totalEarnings) / 100,
-        tripCount: user.role == "inspector" ? 0 : tripCount,
-        tripEarnings:
-          user.role == "driver"
-            ? (config.commissionRates.perTrip * tripCount * totalEarnings) / 100
-            : 0,
-        inspectionCount: user.role == "inspector" ? tripCount : 0,
-        inspectionEarnings:
-          user.role == "inspector"
-            ? config.commissionRates.perInspection * tripCount
-            : 0,
-        bonus:
-          user.role == "inspector"
-            ? tripCount > config.bonuses.minInspectionsForBonus &&
-              config.bonuses.inspectionBonus
-            : tripCount > config.bonuses.minTripsForBonus &&
-              config.bonuses.bonusAmount,
-        deductions: config.deductions.otherDeductions + taxDeduction,
-      };
-
-      paySalary(user._id, user.role, year, lastMonth, salary, salaryData)
-    });
+      console.log("Monthly salary processing completed successfully");
+    } catch (error) {
+      console.error("Error in monthly salary job:", error);
+    }
   },
   null,
-  false, 
-  "Asia/Colombo" 
+  false,
+  "Asia/Colombo"
 );
 
+const processUserSalary = async (user, month, year, configs) => {
+  try {
+    const config = configs[user.role];
+    if (!config) {
+      console.log(`No salary configuration found for role: ${user.role}`);
+      return;
+    }
+
+    let salary = 0;
+    let tripCount = 0;
+    let totalEarnings = 0;
+    let inspectionCount = 0;
+
+    // Calculate based on role
+    switch (user.role) {
+      case "driver":
+        ({ tripCount, totalEarnings } = await calculateDriverEarnings(user._id, month, year));
+        salary = calculateDriverSalary(tripCount, totalEarnings, config);
+        break;
+
+      case "vehicle_owner":
+        ({ tripCount, totalEarnings } = await calculateOwnerEarnings(user._id, month, year));
+        salary = calculateOwnerSalary(tripCount, totalEarnings, config);
+        break;
+
+      case "inspector":
+        inspectionCount = await calculateInspectorEarnings(user._id, month, year);
+        salary = calculateInspectorSalary(inspectionCount, config);
+        break;
+    }
+
+    if (salary <= 0) {
+      console.log(`No salary for user ${user._id} (${user.role})`);
+      return;
+    }
+
+    // Prepare salary data
+    const salaryData = prepareSalaryData(user.role, config, tripCount, totalEarnings, inspectionCount, salary);
+
+    console.log(`User: ${user._id}, Role: ${user.role}, Trips/Inspections: ${tripCount || inspectionCount}, Total Earnings: ${totalEarnings.toFixed(2)}, Calculated Salary: ${salary.toFixed(2)}`);
+
+    // Save to financial records
+    await paySalary(user._id, user.role, year, month, salary, salaryData);
+
+  } catch (error) {
+    console.error(`Error processing salary for user ${user._id}:`, error);
+  }
+};
+
+// Driver calculations
+const calculateDriverEarnings = async (driverId, month, year) => {
+  const { firstDay, lastDay } = getMonthDateRange(month, year);
+  
+  const bookings = await Booking.find({
+    "bookingDetails.driverId": driverId,
+    status: "completed",
+    updatedAt: { $gte: firstDay, $lte: lastDay }
+  });
+
+  const tripCount = bookings.length;
+  const totalEarnings = bookings.reduce((sum, booking) => 
+    sum + (booking.bookingDetails.pricing?.amount || 0), 0
+  );
+
+  return { tripCount, totalEarnings };
+};
+
+const calculateDriverSalary = (tripCount, totalEarnings, config) => {
+  let salary = config.baseSalary || 0;
+  
+  // Commission from trips
+  const commission = (config.commissionRates.perTrip * tripCount * totalEarnings) / 100;
+  salary += commission;
+  
+  // Performance bonus
+  if (tripCount > config.bonuses.minTripsForBonus) {
+    salary += config.bonuses.bonusAmount;
+  }
+  
+  // Deductions
+  const taxDeduction = (config.deductions.taxRate / 100) * salary;
+  const otherDeductions = config.deductions.otherDeductions || 0;
+  
+  salary -= (taxDeduction + otherDeductions);
+  
+  return Math.max(0, salary);
+};
+
+// Vehicle Owner calculations
+const calculateOwnerEarnings = async (ownerId, month, year) => {
+  const { firstDay, lastDay } = getMonthDateRange(month, year);
+  
+  // Get owner's vehicles
+  const ownerVehicles = await Vehicles.find({ ownerId });
+  const vehicleIds = ownerVehicles.map(v => v._id);
+  
+  // Get bookings for these vehicles
+  const bookings = await Booking.find({
+    "bookingDetails.vehicleId": { $in: vehicleIds },
+    status: "completed",
+    updatedAt: { $gte: firstDay, $lte: lastDay }
+  });
+
+  const tripCount = bookings.length;
+  const totalEarnings = bookings.reduce((sum, booking) => 
+    sum + (booking.bookingDetails.pricing?.amount || 0), 0
+  );
+
+  return { tripCount, totalEarnings };
+};
+
+const calculateOwnerSalary = (tripCount, totalEarnings, config) => {
+  // Vehicle owners get revenue share (default 30%)
+  const revenueShareRate = config.commissionRates.revenueShare || 30;
+  let salary = (revenueShareRate * totalEarnings) / 100;
+  
+  // Performance bonus
+  if (tripCount > config.bonuses.minTripsForBonus) {
+    salary += config.bonuses.bonusAmount;
+  }
+  
+  // Deductions (only tax for owners)
+  const taxDeduction = (config.deductions.taxRate / 100) * salary;
+  salary -= taxDeduction;
+  
+  return Math.max(0, salary);
+};
+
+// Inspector calculations
+const calculateInspectorEarnings = async (inspectorId, month, year) => {
+  const { firstDay, lastDay } = getMonthDateRange(month, year);
+  
+  const inspections = await VehicleInspection.find({
+    inspector: inspectorId,
+    status: "completed",
+    updatedAt: { $gte: firstDay, $lte: lastDay }
+  });
+
+  return inspections.length;
+};
+
+const calculateInspectorSalary = (inspectionCount, config) => {
+  let salary = config.baseSalary || 0;
+  
+  // Per inspection earnings
+  const inspectionEarnings = config.commissionRates.perInspection * inspectionCount;
+  salary += inspectionEarnings;
+  
+  // Performance bonus
+  if (inspectionCount > config.bonuses.minInspectionsForBonus) {
+    salary += config.bonuses.inspectionBonus;
+  }
+  
+  // Deductions
+  const taxDeduction = (config.deductions.taxRate / 100) * salary;
+  const otherDeductions = config.deductions.otherDeductions || 0;
+  
+  salary -= (taxDeduction + otherDeductions);
+  
+  return Math.max(0, salary);
+};
+
+// Helper function to prepare salary data
+const prepareSalaryData = (role, config, tripCount, totalEarnings, inspectionCount, totalSalary) => {
+  const baseSalary = config.baseSalary || 0;
+  const taxDeduction = (config.deductions.taxRate / 100) * totalSalary;
+  const otherDeductions = config.deductions.otherDeductions || 0;
+  
+  let bonus = 0;
+  if (role === "inspector") {
+    bonus = inspectionCount > config.bonuses.minInspectionsForBonus ? config.bonuses.inspectionBonus : 0;
+  } else {
+    bonus = tripCount > config.bonuses.minTripsForBonus ? config.bonuses.bonusAmount : 0;
+  }
+
+  return {
+    baseSalary,
+    revenueShare: role === "vehicle_owner" ? (config.commissionRates.revenueShare * totalEarnings) / 100 : 0,
+    tripCount: role !== "inspector" ? tripCount : 0,
+    tripEarnings: role === "driver" ? (config.commissionRates.perTrip * tripCount * totalEarnings) / 100 : 0,
+    inspectionCount: role === "inspector" ? inspectionCount : 0,
+    inspectionEarnings: role === "inspector" ? config.commissionRates.perInspection * inspectionCount : 0,
+    bonus,
+    deductions: taxDeduction + otherDeductions
+  };
+};
+
+// Helper function to get month date range
+const getMonthDateRange = (month, year) => {
+  const firstDay = new Date(year, month - 1, 1, 0, 0, 0);
+  const lastDay = new Date(year, month, 0, 23, 59, 59);
+  return { firstDay, lastDay };
+};
+
+// Existing functions (keep them but they're now used by the new functions above)
 const paySalary = async (id, role, year, month, total, salaryData) => {
   try {
     const salary = await Financial.findOneAndUpdate(
@@ -141,25 +259,15 @@ const paySalary = async (id, role, year, month, total, salaryData) => {
         "period.year": year,
       },
       {
-        financialId: `SAL${year}${month
-          .toString()
-          .padStart(2, "0")}${id.toString().slice(-6)}`,
+        financialId: `SAL${year}${month.toString().padStart(2, "0")}${id.toString().slice(-6)}`,
         type: "salary",
         recipientType: role,
         recipientId: id,
         amount: total,
         period: { month, year },
-        calculationDetails: {
-          baseSalary: salaryData.baseSalary,
-          revenueShare: salaryData.revenueShare,
-          tripCount: salaryData.tripCount,
-          tripEarnings: salaryData.tripEarnings,
-          inspectionCount: salaryData.inspectionCount,
-          inspectionEarnings: salaryData.inspectionEarnings,
-          bonus: salaryData.bonus,
-          deductions: salaryData.deductions,
-        },
+        calculationDetails: salaryData,
         status: "paid",
+        paymentDate: new Date(),
       },
       { upsert: true, new: true }
     );
@@ -167,160 +275,30 @@ const paySalary = async (id, role, year, month, total, salaryData) => {
     return salary;
   } catch (err) {
     console.error("Error paying salary:", err);
-    return;
+    return null;
   }
 };
 
-const checkVehicleOwner = async (vehicleId, userId) => {
-  try {
-    const vehicle = await Vehicles.findById(vehicleId);
-
-    if (!vehicle) {
-      console.log(`Vehicle with ID ${vehicleId} not found.`);
-      return false;
-    }
-
-    return vehicle.ownerId.toString() === userId.toString();
-  } catch (error) {
-    console.error("Error verifying vehicle owner:", error);
-    return false;
-  }
-}
-
 const getSalaryConfigs = async () => {
   try {
-    const salaryConfigs = await SalaryConfig.find({});
-
-    if (salaryConfigs.length === 0) {
-      console.log("No salary configurations found.");
-      return [];
-    }
-
-    // console.log("Salary Configurations:", salaryConfigs);
-    return salaryConfigs;
+    return await SalaryConfig.find({});
   } catch (error) {
     console.error("Error fetching salary configurations:", error);
+    return [];
   }
-}
+};
 
 const usersToPay = async () => {
   try {
-    const payableUsers = await users.find({
+    return await users.find({
       status: "active",
       role: { $in: ["driver", "vehicle_owner", "inspector"] },
     });
-
-    if (payableUsers.length === 0) {
-      console.log("No users found for salary calculation.");
-      return [];
-    }
-
-    // payableUsers.forEach(user => {
-    //   console.log(`User ID: ${user._id}, Role: ${user.role}`);
-    // });
-    return payableUsers;
   } catch (error) {
-    console.error("Error calculating salaries:", error);
-  }
-}
-
-const lastMonthVehicleInspections = async () => {
-  try {
-    const now = new Date();
-    const firstDayOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-      0,
-      0,
-      0
-    );
-    const lastDayOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      0,
-      23,
-      59,
-      59
-    );
-
-    // console.log("First Day of Last Month:", firstDayOfLastMonth);
-    // console.log("Last Day of Last Month:", lastDayOfLastMonth);
-
-    const completedInspectionsLastMonth = await VehicleInspection.find({
-      status: "completed",
-      updatedAt: {
-        $gte: firstDayOfLastMonth,
-        $lte: lastDayOfLastMonth,
-      },
-    });
-
-    if (completedInspectionsLastMonth.length === 0) {
-      console.log("No completed inspections found from last month.");
-      return [];
-    }
-
-    // console.log("Completed Inspections from Last Month:", completedInspectionsLastMonth);
-    return completedInspectionsLastMonth;
-  } catch (error) {
-    console.error("Error fetching last month's vehicle inspections:", error);
+    console.error("Error fetching payable users:", error);
     return [];
   }
-}
-
-const lastMonthBookings = async () => {
-  try {
-    const now = new Date();
-    const firstDayOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-      0,
-      0,
-      0
-    );
-    const lastDayOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      0,
-      23,
-      59,
-      59
-    );
-
-    // console.log("First Day of Last Month:", firstDayOfLastMonth);
-    // console.log("Last Day of Last Month:", lastDayOfLastMonth);
-
-    const lastMonthPayments = await Payment.find({
-      status: "completed",
-      updatedAt: {
-        $gte: firstDayOfLastMonth,
-        $lte: lastDayOfLastMonth,
-      },
-    });
-
-    if (lastMonthPayments.length === 0) {
-      console.log("No completed payments found from last month.");
-      return [];
-    }
-
-    for (const payment of lastMonthPayments) {
-      const booking = await Booking.findById(payment.bookingId);
-      if (!booking) {
-        console.log(`Booking with ID ${payment.bookingId} not found for payment ID ${payment._id}.`);
-        continue;
-      }
-
-      payment.bookingDetails = booking;
-    }
-
-    // console.log("Completed Payments from Last Month:", lastMonthPayments);
-    return lastMonthPayments; 
-  } catch (error) {
-    console.error("Error fetching last month's bookings:", error);
-    return [];
-  }
-}
+};
 
 export const startMonthlyJob = () => {
   monthlyJob.start();
