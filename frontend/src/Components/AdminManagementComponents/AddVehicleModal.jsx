@@ -199,43 +199,55 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn" onClick={onClose}>
       <form
-        className="modal max-h-[90vh] overflow-y-auto rounded-xl"
+        className="bg-gradient-to-br from-neutral-800 via-neutral-800 to-neutral-900 border border-neutral-700/50 rounded-2xl shadow-2xl shadow-black/50 w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scaleIn"
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="modal-header">
-          <div>
-            <h3 className="text-lg font-semibold">Add Vehicle</h3>
-            <p className="text-sm text-gray-500">
-              Register a vehicle on behalf of an owner.
-            </p>
+        {/* Header */}
+        <header className="sticky top-0 bg-neutral-800/95 backdrop-blur-sm px-6 py-5 border-b border-neutral-700/50 z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Add Vehicle</h3>
+              <p className="text-gray-400 mt-1 text-sm">
+                Register a vehicle on behalf of an owner.
+              </p>
+            </div>
+            <button 
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-neutral-700 rounded-lg transition-all duration-200"
+              type="button" 
+              onClick={onClose}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <button className="close-button" type="button" onClick={onClose}>
-            ×
-          </button>
         </header>
 
-        <div className="modal-body space-y-1">
+        <div className="p-6 space-y-6">
           {/* Section 1 - Owner */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Owner Information</h4>
-            <div className="form-grid">
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Owner Information
+            </h4>
+            <div className="grid grid-cols-1 gap-4">
               <label className="flex flex-col">
-                <span>Vehicle owner</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Vehicle owner <span className="text-red-400">*</span></span>
                 <select
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="ownerId"
                   value={formState.ownerId}
                   onChange={handleChange}
                   required
                 >
-                  <option value="" disabled>
+                  <option value="" disabled className="text-gray-500">
                     Select owner
                   </option>
                   {owners.map((owner) => (
-                    <option key={owner._id} value={owner._id}>
+                    <option key={owner._id} value={owner._id} className="text-white bg-neutral-800">
                       {`${getUserName(owner)} (${owner.email})`}
                     </option>
                   ))}
@@ -244,16 +256,17 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
             </div>
           </section>
 
-          <hr />
-
           {/* Section 2 - Basic Info */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Basic Information</h4>
-            <div className="form-grid">
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Basic Information
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <label className="flex flex-col">
-                <span>Make</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Make <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="make"
                   value={formState.make}
                   onChange={handleChange}
@@ -261,9 +274,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Model</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Model <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="model"
                   value={formState.model}
                   onChange={handleChange}
@@ -271,9 +284,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Year</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Year <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="1900"
                   max={new Date().getFullYear()}
@@ -284,18 +297,18 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Color</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Color</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="color"
                   value={formState.color}
                   onChange={handleChange}
                 />
               </label>
               <label className="flex flex-col">
-                <span>License Plate</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">License Plate</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="licensePlate"
                   value={formState.licensePlate}
                   onChange={handleChange}
@@ -304,23 +317,24 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
             </div>
           </section>
 
-          <hr />
-
           {/* Section 3 - Vehicle Details */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Vehicle Details</h4>
-            <div className="form-grid">
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Vehicle Details
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <label className="flex flex-col">
-                <span>Category</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Category</span>
                 <select
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="category"
                   value={formState.category}
                   onChange={handleChange}
                 >
                   {["Sedan", "SUV", "Van", "Truck", "Motorcycle", "Other"].map(
                     (c) => (
-                      <option key={c} value={c}>
+                      <option key={c} value={c} className="text-white bg-neutral-800">
                         {c}
                       </option>
                     )
@@ -328,54 +342,54 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 </select>
               </label>
               <label className="flex flex-col">
-                <span>Fuel Type</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Fuel Type</span>
                 <select
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="fuelType"
                   value={formState.fuelType}
                   onChange={handleChange}
                 >
                   {["Petrol", "Diesel", "Electric", "Hybrid"].map((f) => (
-                    <option key={f} value={f}>
+                    <option key={f} value={f} className="text-white bg-neutral-800">
                       {f}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="flex flex-col">
-                <span>Transmission</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Transmission</span>
                 <select
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="transmission"
                   value={formState.transmission}
                   onChange={handleChange}
                 >
                   {["Automatic", "Manual"].map((t) => (
-                    <option key={t} value={t}>
+                    <option key={t} value={t} className="text-white bg-neutral-800">
                       {t}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="flex flex-col">
-                <span>Condition</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Condition</span>
                 <select
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="condition"
                   value={formState.condition}
                   onChange={handleChange}
                 >
                   {["Excellent", "Good", "Fair", "Poor"].map((c) => (
-                    <option key={c} value={c}>
+                    <option key={c} value={c} className="text-white bg-neutral-800">
                       {c}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="flex flex-col">
-                <span>Seating Capacity</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Seating Capacity</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="1"
                   name="seatingCapacity"
@@ -384,9 +398,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Mileage (km)</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Mileage (km)</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="0"
                   name="mileage"
@@ -397,16 +411,17 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
             </div>
           </section>
 
-          <hr />
-
           {/* Section 4 - Pricing */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Pricing & Rates</h4>
-            <div className="form-grid">
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Pricing & Rates
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <label className="flex flex-col">
-                <span>Daily Rate</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Daily Rate <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="0"
                   step="0.01"
@@ -417,9 +432,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Weekly Rate</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Weekly Rate</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="0"
                   step="0.01"
@@ -429,9 +444,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Monthly Rate</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Monthly Rate</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="0"
                   step="0.01"
@@ -441,9 +456,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Security Deposit</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Security Deposit</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   type="number"
                   min="0"
                   step="0.01"
@@ -453,9 +468,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Currency</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Currency</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="currency"
                   value={formState.currency}
                   onChange={handleChange}
@@ -464,16 +479,17 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
             </div>
           </section>
 
-          <hr />
-
           {/* Section 5 - Location */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Location</h4>
-            <div className="form-grid">
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Location
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col">
-                <span>Address</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Address <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="address"
                   value={formState.address}
                   onChange={handleChange}
@@ -481,9 +497,9 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>City</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">City <span className="text-red-400">*</span></span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="city"
                   value={formState.city}
                   onChange={handleChange}
@@ -491,18 +507,18 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                 />
               </label>
               <label className="flex flex-col">
-                <span>Province</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Province</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="province"
                   value={formState.province}
                   onChange={handleChange}
                 />
               </label>
               <label className="flex flex-col">
-                <span>Postal Code</span>
+                <span className="text-sm font-medium text-gray-300 mb-2">Postal Code</span>
                 <input
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500"
                   name="postalCode"
                   value={formState.postalCode}
                   onChange={handleChange}
@@ -511,49 +527,54 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
             </div>
           </section>
 
-          <hr />
-
           {/* Section 6 - Additional */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Additional Details</h4>
-            <label className="flex flex-col">
-              <span>Description</span>
-              <textarea
-                className="input-control"
-                name="description"
-                rows={3}
-                value={formState.description}
-                onChange={handleChange}
-              />
-            </label>
-            <label className="flex flex-col">
-              <span>Features (comma separated)</span>
-              <textarea
-                className="input-control"
-                name="features"
-                rows={2}
-                value={formState.features}
-                onChange={handleChange}
-              />
-            </label>
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Additional Details
+            </h4>
+            <div className="space-y-4">
+              <label className="flex flex-col">
+                <span className="text-sm font-medium text-gray-300 mb-2">Description</span>
+                <textarea
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500 resize-none"
+                  name="description"
+                  rows={3}
+                  value={formState.description}
+                  onChange={handleChange}
+                />
+              </label>
+              <label className="flex flex-col">
+                <span className="text-sm font-medium text-gray-300 mb-2">Features (comma separated)</span>
+                <textarea
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white placeholder-gray-500 resize-none"
+                  name="features"
+                  rows={2}
+                  value={formState.features}
+                  onChange={handleChange}
+                />
+              </label>
+            </div>
           </section>
 
-          <hr />
-
           {/* Section 7 - Media */}
-          <section>
-            <h4 className="text-base font-semibold mb-2">Media</h4>
+          <section className="bg-neutral-800/50 rounded-xl p-5 border border-neutral-700/30">
+            <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#FF5A00] rounded-full"></div>
+              Media
+            </h4>
             <div className="flex flex-col gap-4">
               <label className="flex flex-col">
+                <span className="text-sm font-medium text-gray-300 mb-2">Upload Images</span>
                 <input
                   type="file"
-                  className="input-control"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#FF5A00] file:text-white hover:file:bg-[#FF5A00]/90"
                   accept="image/*"
                   multiple
                   onChange={handleImageUpload}
                 />
               </label>
-              <div className="media-grid">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {(formState?.images || []).map((image) => {
                   const preview =
                     image.preview ||
@@ -563,51 +584,74 @@ const AddVehicleModal = ({ owners, onClose, onSubmit, isSubmitting }) => {
                       : "");
 
                   return (
-                    <div className="media-card" key={image.id}>
+                    <div className="bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden" key={image.id}>
                       {preview ? (
                         <img
                           src={preview}
                           alt={image.name || "Vehicle photo"}
+                          className="w-full h-24 object-cover"
                         />
                       ) : (
-                        <div className="media-placeholder">No preview</div>
+                        <div className="w-full h-24 bg-neutral-700 flex items-center justify-center text-gray-400">No preview</div>
                       )}
-                      <div className="media-card-footer flex flex-col">
-                        <span
-                          className="whitespace-nowrap overflow-hidden text-ellipsis"
-                          style={{ textOverflow: "ellipsis" }}
-                          title={image.name}
-                        >
+                      <div className="p-3 flex flex-col">
+                        <span className="text-white text-sm font-medium truncate" title={image.name}>
                           {image.name || "Photo"}
                         </span>
                         <button
                           type="button"
-                          className="btn btn-text"
+                          className="text-red-400 hover:text-red-300 text-sm font-medium mt-1 transition-colors duration-200"
                           onClick={() => handleRemoveImage(image.id)}
                         >
-                          <span className="text-red-500">Remove</span>
+                          Remove
                         </button>
                       </div>
                     </div>
                   );
                 })}
                 {(!formState?.images || formState.images.length === 0) && (
-                  <p className="muted">No photos uploaded yet.</p>
+                  <p className="text-gray-400 col-span-full text-center py-4">No photos uploaded yet.</p>
                 )}
               </div>
             </div>
           </section>
 
-          {error && <p className="error-text text-red-500">{error}</p>}
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
         </div>
 
-        <footer className="modal-footer pt-3 mt-4 flex justify-end gap-2">
-          <button className="btn btn-secondary" type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Create Vehicle"}
-          </button>
+        <footer className="sticky bottom-0 bg-neutral-800/95 backdrop-blur-sm px-6 py-4 border-t border-neutral-700/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+            <button 
+              className="px-6 py-3 bg-transparent hover:bg-neutral-700 text-gray-300 hover:text-white font-medium rounded-xl transition-all duration-200 border border-neutral-600/50"
+              type="button" 
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button 
+              className="px-6 py-3 bg-[#FF5A00] hover:bg-[#FF5A00]/90 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-[#FF5A00]/20 hover:shadow-[#FF5A00]/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Create Vehicle
+                </>
+              )}
+            </button>
+          </div>
         </footer>
       </form>
     </div>

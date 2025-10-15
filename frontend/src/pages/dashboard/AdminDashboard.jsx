@@ -69,124 +69,82 @@ function formatCurrency(value, currency = DEFAULT_CURRENCY) {
 }
 
 function OverviewCard({ label, value, helper, loading, variant = "primary" }) {
+  const variantStyles = {
+    primary: "bg-neutral-800 border-neutral-700",
+    accent: "bg-gradient-to-r from-[#FF5A00] to-orange-600 border-[#FF5A00]"
+  };
+
   return (
-    <div className={`metric-card metric-card--${variant}`}>
-      <span className="metric-label">{label}</span>
-      <strong className="metric-value">{loading ? "…" : value}</strong>
-      {helper && <span className="metric-helper">{helper}</span>}
+    <div className={`rounded-xl border p-6 shadow-lg transition-all duration-300 hover:shadow-xl ${variantStyles[variant]}`}>
+      <span className="text-gray-400 text-sm font-medium block mb-2">{label}</span>
+      <strong className="text-white text-2xl font-bold block mb-2">
+        {loading ? (
+          <div className="h-8 bg-neutral-700 rounded animate-pulse"></div>
+        ) : (
+          value
+        )}
+      </strong>
+      {helper && <span className="text-gray-500 text-sm">{helper}</span>}
     </div>
   );
 }
 
 function OverviewSection({ metrics, currency, onRefresh, isLoading }) {
   return (
-    <section className="panel">
-      <header className="panel-header">
+    <section className="bg-neutral-800 rounded-2xl border border-neutral-700 shadow-lg mb-6">
+      <div className="flex items-center justify-between p-6 border-b border-neutral-700">
         <div>
-          <h3>Overview</h3>
-          <p className="panel-subtitle">Key indicators across the platform.</p>
+          <h3 className="text-2xl font-bold text-white">Overview</h3>
+          <p className="text-gray-400 mt-1">Key indicators across the platform</p>
         </div>
-        <button className="btn btn-secondary" type="button" onClick={onRefresh} disabled={isLoading}>
-          Refresh
+        <button 
+          className="bg-neutral-700 hover:bg-neutral-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+          type="button" 
+          onClick={onRefresh} 
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          )}
+          <span>Refresh</span>
         </button>
-      </header>
-      <div className="metrics-grid">
-        <OverviewCard
-          label="Total Users"
-          value={formatNumber(metrics.users)}
-          helper={`Pending approvals: ${formatNumber(metrics.pendingUsers)}`}
-          loading={isLoading}
-        />
-        <OverviewCard
-          label="Vehicles"
-          value={formatNumber(metrics.vehicles)}
-          helper={`Awaiting review: ${formatNumber(metrics.pendingVehicles)}`}
-          loading={isLoading}
-        />
-        <OverviewCard
-          label="Bookings"
-          value={formatNumber(metrics.bookings)}
-          helper={`Active trips: ${formatNumber(metrics.activeBookings)}`}
-          loading={isLoading}
-        />
-        {/* <OverviewCard
-          label="Total Earnings"
-          value={formatCurrency(metrics.earnings, currency)}
-          // helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
-          loading={isLoading}
-          variant="accent"
-        /> */}
+      </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <OverviewCard
+            label="Total Users"
+            value={formatNumber(metrics.users)}
+            helper={`Pending approvals: ${formatNumber(metrics.pendingUsers)}`}
+            loading={isLoading}
+          />
+          <OverviewCard
+            label="Vehicles"
+            value={formatNumber(metrics.vehicles)}
+            helper={`Awaiting review: ${formatNumber(metrics.pendingVehicles)}`}
+            loading={isLoading}
+          />
+          <OverviewCard
+            label="Bookings"
+            value={formatNumber(metrics.bookings)}
+            helper={`Active trips: ${formatNumber(metrics.activeBookings)}`}
+            loading={isLoading}
+          />
+          <OverviewCard
+            label="Total Earnings"
+            value={formatCurrency(metrics.earnings, currency)}
+            helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
+            loading={isLoading}
+            variant="accent"
+          />
+        </div>
       </div>
     </section>
   );
 }
-
-// function AdvertisementForm({ adminId, onCreated }) {
-//   const [formData, setFormData] = useState({
-//     title: "",
-//     description: "",
-//     isActive: true,
-//   });
-//   const [error, setError] = useState("");
-
-//   const handleChange = (event) => {
-//     const { name, value, type, checked } = event.target;
-//     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-//   };
-
-//   const handleSubmit = async (event) => {
-//     event.preventDefault();
-//     setError("");
-//     try {
-//       const response = await apiRequest("/advertisements", {
-//         method: "POST",
-//         body: JSON.stringify({
-//           adId: `ADV${Date.now().toString().slice(-6)}`,
-//           createdBy: adminId,
-//           title: formData.title,
-//           description: formData.description,
-//           isActive: formData.isActive,
-//         }),
-//       });
-//       if (!response.ok) {
-//         const data = await response.json();
-//         throw new Error(data.message || "Failed to create advertisement");
-//       }
-//       setFormData({ title: "", description: "", isActive: true });
-//       onCreated?.();
-//     } catch (err) {
-//       setError(err.message);
-//     }
-//   };
-
-//   return (
-//     <form className="form-panel" onSubmit={handleSubmit}>
-//       <h3>Create Advertisement</h3>
-//       <label>
-//         Title
-//         <input name="title" value={formData.title} onChange={handleChange} required className="input-control" />
-//       </label>
-//       <label>
-//         Description
-//         <textarea
-//           name="description"
-//           value={formData.description}
-//           onChange={handleChange}
-//           rows={3}
-//           className="input-control"
-//         />
-//       </label>
-//       <label className="checkbox">
-//         <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
-//         Active
-//       </label>
-//       {error && <p className="error-text">{error}</p>}
-//       <button className="btn" type="submit">
-//         Create
-//       </button>
-//     </form>
-//   );
-// }
 
 function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -251,84 +209,84 @@ function AdminDashboard() {
   }, [refreshUsers, refreshVehicles, refreshBookings, refreshPayments, refreshPayouts]);
 
   return (
-    <>
-      <div className="flex flex-row gap-2 max-h-screen">
-        <AdminNavigation
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          user={user}
-          onLogout={logout}
-        />
+    <div className="min-h-screen bg-neutral-900 text-white flex">
+      <AdminNavigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        user={user}
+        onLogout={logout}
+      />
 
-        <main className="customer-main">
-          <div className="panel-stack">
-            {activeTab === "dashboard" && (
-              <>
-                <OverviewSection
-                  metrics={metrics}
-                  currency={currency}
-                  onRefresh={refreshAll}
-                  isLoading={overviewLoading}
-                />
-                <FinancialManagementPanel />
-              </>
-            )}
+      <main className="flex-1 p-8 overflow-auto">
+        {/* Background Decorative Elements */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-10 right-10 w-64 h-64 bg-[#FF5A00] rounded-full blur-3xl opacity-5"></div>
+          <div className="absolute bottom-10 left-10 w-48 h-48 bg-[#FF5A00] rounded-full blur-2xl opacity-3"></div>
+        </div>
 
-            {/* <div className="admin-panels">
-              <AdvertisementForm adminId={user?._id} />
-            </div> */}
-
-            {activeTab === "announcements" && (
-              <AnnouncementManagementPanel adminId={user?._id} />
-            )}
-
-            {activeTab === "vehicles" && (
-              <VehicleManagementPanel
-                vehicles={vehiclesResource.data}
-                owners={usersResource.data}
-                isLoading={vehiclesResource.isLoading}
-                error={vehiclesResource.error}
-                onRefresh={refreshVehicles}
+        <div className="relative z-10">
+          {activeTab === "dashboard" && (
+            <>
+              <OverviewSection
+                metrics={metrics}
+                currency={currency}
+                onRefresh={refreshAll}
+                isLoading={overviewLoading}
               />
-            )}
+              <FinancialManagementPanel />
+            </>
+          )}
 
-            {activeTab === "users" && (
-              <UserManagementPanel
-                users={usersResource.data}
-                isLoading={usersResource.isLoading}
-                error={usersResource.error}
-                onRefresh={refreshUsers}
-              />
-            )}
+          {activeTab === "announcements" && (
+            <AnnouncementManagementPanel adminId={user?._id} />
+          )}
 
-            {activeTab === "bookings" && (
-              <BookingManagementPanel
-                bookings={bookingsResource.data}
-                vehicles={vehiclesResource.data}
-                users={usersResource.data}
-                isLoading={bookingsResource.isLoading}
-                error={bookingsResource.error}
-                onRefresh={refreshBookings}
-              />
-            )}
+          {activeTab === "vehicles" && (
+            <VehicleManagementPanel
+              vehicles={vehiclesResource.data}
+              owners={usersResource.data}
+              isLoading={vehiclesResource.isLoading}
+              error={vehiclesResource.error}
+              onRefresh={refreshVehicles}
+            />
+          )}
 
-            {activeTab === "payments" && (
-              <PaymentsManagementPanel
-                payments={paymentsResource.data}
-                payouts={payoutsResource.data}
-                paymentsLoading={paymentsResource.isLoading}
-                payoutsLoading={payoutsResource.isLoading}
-                paymentsError={paymentsResource.error}
-                payoutsError={payoutsResource.error}
-                onRefresh={async () => {
-                  await Promise.all([refreshPayments()]);
-                }}
-              />
-            )}
-          </div>
-        </main>
-      </div>
-    </>
+          {activeTab === "users" && (
+            <UserManagementPanel
+              users={usersResource.data}
+              isLoading={usersResource.isLoading}
+              error={usersResource.error}
+              onRefresh={refreshUsers}
+            />
+          )}
+
+          {activeTab === "bookings" && (
+            <BookingManagementPanel
+              bookings={bookingsResource.data}
+              vehicles={vehiclesResource.data}
+              users={usersResource.data}
+              isLoading={bookingsResource.isLoading}
+              error={bookingsResource.error}
+              onRefresh={refreshBookings}
+            />
+          )}
+
+          {activeTab === "payments" && (
+            <PaymentsManagementPanel
+              payments={paymentsResource.data}
+              payouts={payoutsResource.data}
+              paymentsLoading={paymentsResource.isLoading}
+              payoutsLoading={payoutsResource.isLoading}
+              paymentsError={paymentsResource.error}
+              payoutsError={payoutsResource.error}
+              onRefresh={async () => {
+                await Promise.all([refreshPayments()]);
+              }}
+            />
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
 

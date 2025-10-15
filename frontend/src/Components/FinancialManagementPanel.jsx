@@ -70,8 +70,6 @@ function FinancialManagementPanel() {
     fetchAdvancedPaymentDetails();
   }, [filterType]);
 
-
-
   // Process payments
   const handleProcessPayments = async (financialIds) => {
     setError("");
@@ -106,24 +104,22 @@ function FinancialManagementPanel() {
     }
   };
 
-
   return (
-    <section className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <header className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+    <section className="bg-neutral-800 rounded-2xl border border-neutral-700 shadow-lg">
+      <header className="px-6 py-4 border-b border-neutral-700 flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <h3 className="text-2xl font-bold text-white">
             Financial Management
           </h3>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-400 mt-1">
             Manage salaries, payouts, and financial records
           </p>
         </div>
-  
       </header>
 
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 flex items-center">
+        <div className="mx-6 mt-4 p-4 bg-red-900/50 border border-red-700 rounded-lg">
+          <p className="text-red-300 flex items-center">
             <span className="mr-2">⚠️</span>
             {error}
           </p>
@@ -160,11 +156,11 @@ function PeriodSelector({ period, onChange }) {
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   return (
-    <div className="flex items-center space-x-3 bg-white p-3 rounded-lg border border-gray-200">
+    <div className="flex items-center space-x-3 bg-neutral-700 p-3 rounded-lg border border-neutral-600">
       <div className="flex items-center space-x-2">
-        <span className="text-sm font-medium text-gray-700">Period:</span>
+        <span className="text-sm font-medium text-gray-300">Period:</span>
         <select
-          className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          className="w-32 px-3 py-2 bg-neutral-600 border border-neutral-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white text-sm"
           value={period.month}
           onChange={(e) => onChange({ ...period, month: parseInt(e.target.value) })}
         >
@@ -175,7 +171,7 @@ function PeriodSelector({ period, onChange }) {
           ))}
         </select>
         <select
-          className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          className="w-24 px-3 py-2 bg-neutral-600 border border-neutral-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white text-sm"
           value={period.year}
           onChange={(e) => onChange({ ...period, year: parseInt(e.target.value) })}
         >
@@ -192,13 +188,13 @@ function PeriodSelector({ period, onChange }) {
 
 function FinancialSummary({ filterType, setFilterType, data, loading }) {
   return (
-    <div className="p-6 bg-gray-50 rounded-xl shadow-sm">
+    <div className="p-6 bg-neutral-700/50 rounded-xl border border-neutral-600 m-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h4 className="text-lg font-semibold text-gray-900">
+        <h4 className="text-lg font-semibold text-white">
           Financial Overview
         </h4>
         <select
-          className="mt-3 md:mt-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mt-3 md:mt-0 px-3 py-2 bg-neutral-600 border border-neutral-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
         >
@@ -211,11 +207,11 @@ function FinancialSummary({ filterType, setFilterType, data, loading }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Period Card */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 border-l-4 border-l-blue-500">
-          <span className="text-sm font-medium text-gray-600">
+        <div className="bg-neutral-800 p-6 rounded-xl border border-neutral-700 border-l-4 border-l-[#FF5A00]">
+          <span className="text-sm font-medium text-gray-400">
             Current Period
           </span>
-          <strong className="block mt-2 text-2xl text-gray-900">
+          <strong className="block mt-2 text-2xl text-white">
             {formatCurrency(data[0]?.amount)}
           </strong>
           <span className="text-sm text-gray-500 mt-1 block">
@@ -227,11 +223,11 @@ function FinancialSummary({ filterType, setFilterType, data, loading }) {
         </div>
 
         {/* Previous Period Card */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 border-l-4 border-l-green-500">
-          <span className="text-sm font-medium text-gray-600">
+        <div className="bg-neutral-800 p-6 rounded-xl border border-neutral-700 border-l-4 border-l-green-500">
+          <span className="text-sm font-medium text-gray-400">
             Previous Period
           </span>
-          <strong className="block mt-2 text-2xl text-gray-900">
+          <strong className="block mt-2 text-2xl text-white">
             {formatCurrency(data[1]?.amount)}
           </strong>
           <span className="text-sm text-gray-500 mt-1 block">
@@ -293,11 +289,11 @@ function SalaryConfigSection({ config, onUpdate }) {
   ];
 
   return (
-    <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
+    <div className="mt-6 p-6 bg-neutral-700/50 rounded-xl border border-neutral-600 mx-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h4 className="text-xl font-semibold text-gray-900">Salary Configuration</h4>
-          <p className="text-gray-600 mt-1">Configure payment rules for different roles</p>
+          <h4 className="text-xl font-semibold text-white">Salary Configuration</h4>
+          <p className="text-gray-400 mt-1">Configure payment rules for different roles</p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-500">
           <span>⚙️</span>
@@ -307,12 +303,12 @@ function SalaryConfigSection({ config, onUpdate }) {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {roles.map(({ key, label, icon, description }) => (
-          <div key={key} className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div key={key} className="bg-neutral-800 p-6 rounded-xl border border-neutral-700 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center space-x-3 mb-4">
               <span className="text-2xl">{icon}</span>
               <div>
-                <h5 className="text-lg font-semibold text-gray-900">{label}</h5>
-                <p className="text-sm text-gray-500">{description}</p>
+                <h5 className="text-lg font-semibold text-white">{label}</h5>
+                <p className="text-sm text-gray-400">{description}</p>
               </div>
             </div>
             
@@ -367,14 +363,14 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
         {/* Base Salary */}
         {(role === "driver" || role === "inspector") && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Base Salary (LKR)</label>
+            <label className="text-sm font-medium text-gray-300">Base Salary (LKR)</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₨</span>
               <input
                 type="number"
                 value={config.baseSalary || 0}
                 onChange={(e) => handleChange("baseSalary", parseFloat(e.target.value) || 0)}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-8 pr-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                 placeholder="Enter base salary"
                 min="0"
                 step="1000"
@@ -384,15 +380,15 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
         )}
 
         {/* Commission Rates */}
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h6 className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
+        <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/50">
+          <h6 className="text-sm font-semibold text-blue-300 mb-3 flex items-center">
             <span className="mr-2">💸</span>
             Commission Rates
           </h6>
           <div className="space-y-3">
             {role === "driver" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Commission per Trip (%)</label>
+                <label className="text-sm font-medium text-gray-300">Commission per Trip (%)</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -401,7 +397,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                     max="100"
                     value={getFieldValue("commissionRates", "perTrip")}
                     onChange={(e) => handleNestedChange("commissionRates", "perTrip", parseFloat(e.target.value) || 0)}
-                    className="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pr-8 pl-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                 </div>
@@ -410,7 +406,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
 
             {role === "vehicle_owner" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Revenue Share (%)</label>
+                <label className="text-sm font-medium text-gray-300">Revenue Share (%)</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -419,7 +415,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                     max="100"
                     value={getFieldValue("commissionRates", "revenueShare")}
                     onChange={(e) => handleNestedChange("commissionRates", "revenueShare", parseFloat(e.target.value) || 0)}
-                    className="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pr-8 pl-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
                 </div>
@@ -428,7 +424,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
 
             {role === "inspector" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Per Inspection Rate (LKR)</label>
+                <label className="text-sm font-medium text-gray-300">Per Inspection Rate (LKR)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₨</span>
                   <input
@@ -437,7 +433,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                     step="100"
                     value={getFieldValue("commissionRates", "perInspection")}
                     onChange={(e) => handleNestedChange("commissionRates", "perInspection", parseFloat(e.target.value) || 0)}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-8 pr-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                 </div>
               </div>
@@ -446,8 +442,8 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
         </div>
 
         {/* Bonuses */}
-        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <h6 className="text-sm font-semibold text-green-900 mb-3 flex items-center">
+        <div className="p-4 bg-green-900/20 rounded-lg border border-green-700/50">
+          <h6 className="text-sm font-semibold text-green-300 mb-3 flex items-center">
             <span className="mr-2">🎯</span>
             Performance Bonuses
           </h6>
@@ -455,17 +451,17 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
             {(role === "driver" || role === "vehicle_owner") && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Minimum Trips for Bonus</label>
+                  <label className="text-sm font-medium text-gray-300">Minimum Trips for Bonus</label>
                   <input
                     type="number"
                     min="0"
                     value={getFieldValue("bonuses", "minTripsForBonus")}
                     onChange={(e) => handleNestedChange("bonuses", "minTripsForBonus", parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Bonus Amount (LKR)</label>
+                  <label className="text-sm font-medium text-gray-300">Bonus Amount (LKR)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₨</span>
                     <input
@@ -474,7 +470,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                       step="1000"
                       value={getFieldValue("bonuses", "bonusAmount")}
                       onChange={(e) => handleNestedChange("bonuses", "bonusAmount", parseFloat(e.target.value) || 0)}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-8 pr-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                     />
                   </div>
                 </div>
@@ -484,17 +480,17 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
             {role === "inspector" && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Minimum Inspections for Bonus</label>
+                  <label className="text-sm font-medium text-gray-300">Minimum Inspections for Bonus</label>
                   <input
                     type="number"
                     min="0"
                     value={getFieldValue("bonuses", "minInspectionsForBonus")}
                     onChange={(e) => handleNestedChange("bonuses", "minInspectionsForBonus", parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Inspection Bonus (LKR)</label>
+                  <label className="text-sm font-medium text-gray-300">Inspection Bonus (LKR)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₨</span>
                     <input
@@ -503,7 +499,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                       step="1000"
                       value={getFieldValue("bonuses", "inspectionBonus")}
                       onChange={(e) => handleNestedChange("bonuses", "inspectionBonus", parseFloat(e.target.value) || 0)}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-8 pr-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                     />
                   </div>
                 </div>
@@ -513,14 +509,14 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
         </div>
 
         {/* Deductions */}
-        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-          <h6 className="text-sm font-semibold text-red-900 mb-3 flex items-center">
+        <div className="p-4 bg-red-900/20 rounded-lg border border-red-700/50">
+          <h6 className="text-sm font-semibold text-red-300 mb-3 flex items-center">
             <span className="mr-2">📉</span>
             Deductions
           </h6>
           <div className="grid grid-cols-1 gap-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Tax Rate (%)</label>
+              <label className="text-sm font-medium text-gray-300">Tax Rate (%)</label>
               <div className="relative">
                 <input
                   type="number"
@@ -529,7 +525,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                   max="100"
                   value={getFieldValue("deductions", "taxRate")}
                   onChange={(e) => handleNestedChange("deductions", "taxRate", parseFloat(e.target.value) || 0)}
-                  className="w-full pr-8 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pr-8 pl-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                 />
                 <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
               </div>
@@ -537,7 +533,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
 
             {role === "driver" &&  (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Other Deductions (LKR)</label>
+                <label className="text-sm font-medium text-gray-300">Other Deductions (LKR)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₨</span>
                   <input
@@ -546,7 +542,7 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
                     step="100"
                     value={getFieldValue("deductions", "otherDeductions")}
                     onChange={(e) => handleNestedChange("deductions", "otherDeductions", parseFloat(e.target.value) || 0)}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-8 pr-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5A00] text-white"
                   />
                 </div>
               </div>
@@ -555,16 +551,16 @@ function ConfigForm({ config, onChange, onSave, onCancel, saving, role }) {
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+      <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-neutral-600">
         <button 
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="px-4 py-2 bg-neutral-600 text-gray-300 rounded-lg font-medium hover:bg-neutral-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-500"
           onClick={onCancel}
           disabled={saving}
         >
           Cancel
         </button>
         <button 
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          className="px-4 py-2 bg-[#FF5A00] text-white rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF5A00] disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           onClick={onSave}
           disabled={saving}
         >
@@ -589,10 +585,10 @@ function ConfigDisplay({ config, onEdit, role }) {
   if (!config) {
     return (
       <div className="text-center py-6">
-        <div className="text-4xl mb-3 text-gray-400">⚙️</div>
-        <p className="text-gray-500 mb-4">No configuration set</p>
+        <div className="text-4xl mb-3 text-gray-500">⚙️</div>
+        <p className="text-gray-400 mb-4">No configuration set</p>
         <button 
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 bg-[#FF5A00] text-white rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
           onClick={onEdit}
         >
           Configure Settings
@@ -648,13 +644,13 @@ function ConfigDisplay({ config, onEdit, role }) {
       {summaryItems.length > 0 ? (
         <div className="space-y-3">
           {summaryItems.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 bg-neutral-700 rounded-lg">
               <div className="flex items-center space-x-3">
                 <span className="text-lg">{item.icon}</span>
-                <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                <span className="text-sm font-medium text-gray-300">{item.label}</span>
               </div>
               <span className={`text-sm font-semibold ${
-                item.label.includes('Tax') || item.label.includes('Deduction') ? 'text-red-600' : 'text-green-600'
+                item.label.includes('Tax') || item.label.includes('Deduction') ? 'text-red-400' : 'text-green-400'
               }`}>
                 {item.value}
               </span>
@@ -666,15 +662,6 @@ function ConfigDisplay({ config, onEdit, role }) {
           <p className="text-gray-500 text-sm">Basic configuration applied</p>
         </div>
       )}
-      
-      {/* <button 
-  className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-  onClick={onEdit}
-  disabled={true}
->
-  <span>✏️</span>
-  <span>Edit Configuration</span>
-</button> */}
     </div>
   );
 }
@@ -822,18 +809,18 @@ function FinancialRecordsTable() {
   });
 
   return (
-    <section className="panel">
-      <header className="panel-header">
+    <section className="p-6">
+      <header className="flex items-center justify-between mb-6">
         <div>
-          <h3>Financial Records</h3>
-          <p className="panel-subtitle">All Salary Payments & Payouts</p>
+          <h3 className="text-2xl font-bold text-white">Financial Records</h3>
+          <p className="text-gray-400 mt-1">All Salary Payments & Payouts</p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div className="flex gap-3 flex-wrap items-center">
           {/* Filters */}
           <select
             value={filters.role}
             onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
-            className="input-control"
+            className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
           >
             {roleOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -845,7 +832,7 @@ function FinancialRecordsTable() {
           <select
             value={filters.month}
             onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
-            className="input-control"
+            className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
           >
             {monthOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -857,7 +844,7 @@ function FinancialRecordsTable() {
           <select
             value={filters.year}
             onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-            className="input-control"
+            className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#FF5A00]"
           >
             {yearOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -867,7 +854,7 @@ function FinancialRecordsTable() {
           </select>
 
           <button
-            className="btn btn-secondary"
+            className="px-4 py-2 bg-[#FF5A00] text-white rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 disabled:opacity-50"
             type="button"
             onClick={handleDownloadReport}
             disabled={loading || financials.length === 0}
@@ -876,7 +863,7 @@ function FinancialRecordsTable() {
           </button>
           
           <button
-            className="btn btn-secondary"
+            className="px-4 py-2 bg-neutral-600 text-white rounded-lg font-medium hover:bg-neutral-500 transition-colors duration-200 disabled:opacity-50"
             type="button"
             onClick={fetchFinancialRecords}
             disabled={loading}
@@ -890,13 +877,13 @@ function FinancialRecordsTable() {
       {stats.totalsByRole && stats.totalsByRole.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {stats.totalsByRole.map((roleStat) => (
-            <div key={roleStat._id} className="bg-white p-4 rounded-lg border border-gray-200">
+            <div key={roleStat._id} className="bg-neutral-800 p-4 rounded-xl border border-neutral-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 capitalize">
+                  <p className="text-sm font-medium text-gray-400 capitalize">
                     {roleStat._id || 'Unknown'}
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-white">
                     {formatCurrency(roleStat.totalPaid)}
                   </p>
                 </div>
@@ -905,7 +892,7 @@ function FinancialRecordsTable() {
                     {roleStat.paidCount} payments
                   </p>
                   {roleStat.totalPending > 0 && (
-                    <p className="text-sm text-orange-600">
+                    <p className="text-sm text-orange-400">
                       {formatCurrency(roleStat.totalPending)} pending
                     </p>
                   )}
@@ -917,79 +904,77 @@ function FinancialRecordsTable() {
       )}
 
       {/* Records Table */}
-      <div className="management-subpanel">
+      <div className="bg-neutral-800 rounded-xl border border-neutral-700">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-3 text-gray-600">Loading financial records...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF5A00] mx-auto"></div>
+            <p className="mt-3 text-gray-400">Loading financial records...</p>
           </div>
         ) : financials.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-4xl mb-3 text-gray-400">📊</div>
-            <p className="text-gray-500">No financial records found for the selected criteria.</p>
+            <div className="text-4xl mb-3 text-gray-500">📊</div>
+            <p className="text-gray-400">No financial records found for the selected criteria.</p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="management-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-neutral-700">
                 <tr>
-                  <th>Financial ID</th>
-                  <th>Recipient</th>
-                  <th>Role</th>
-                  <th>Amount</th>
-                  <th>Period</th>
-                  <th>Payment Date</th>
-                  <th>Status</th>
-                  <th>Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Financial ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Recipient</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Period</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Payment Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-neutral-700">
                 {financials.map((record) => (
-                  <tr key={record._id}>
-                    <td>
-                      <div className="cell-stack">
-                        <strong>{record.financialId}</strong>
-                        <span className="muted text-xs">
+                  <tr key={record._id} className="hover:bg-neutral-700/50 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-white">{record.financialId}</div>
+                        <div className="text-xs text-gray-400">
                           {record.type}
-                        </span>
+                        </div>
                       </div>
                     </td>
-                    <td>
-                      <div className="cell-stack">
-                        <span>{getUserName(record.recipientId)}</span>
-                        <span className="muted text-xs">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm text-white">{getUserName(record.recipientId)}</div>
+                        <div className="text-xs text-gray-400">
                           {record.recipientId?.email}
-                        </span>
+                        </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                        record.recipientType === 'driver' ? 'bg-blue-100 text-blue-800' :
-                        record.recipientType === 'vehicle_owner' ? 'bg-green-100 text-green-800' :
-                        'bg-purple-100 text-purple-800'
+                        record.recipientType === 'driver' ? 'bg-blue-900/50 text-blue-300' :
+                        record.recipientType === 'vehicle_owner' ? 'bg-green-900/50 text-green-300' :
+                        'bg-purple-900/50 text-purple-300'
                       }`}>
                         {record.recipientType}
                       </span>
                     </td>
-                    <td className="font-semibold">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white">
                       {formatCurrency(record.amount)}
                     </td>
-                    <td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       {record.period.month}/{record.period.year}
                     </td>
-                    <td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       {formatDate(record.paymentDate || record.updatedAt)}
                     </td>
-                    <td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <StatusPill value={record.status} />
                     </td>
-                    <td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button 
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-[#FF5A00] hover:text-orange-400 text-sm font-medium transition-colors duration-200"
                         onClick={() => {
-                          // Show calculation details modal
                           console.log('Calculation details:', record.calculationDetails);
-                          // You can implement a modal here to show detailed breakdown
                         }}
                       >
                         View Details

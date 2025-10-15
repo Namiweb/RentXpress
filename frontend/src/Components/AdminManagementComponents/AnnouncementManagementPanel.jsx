@@ -120,23 +120,23 @@ const AnnouncementManagementPanel = ({ adminId }) => {
   };
 
 return (
-    <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <section className="bg-gradient-to-br from-neutral-800 via-neutral-800 to-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
       {/* Header Section */}
-      <header className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-200">
+      <header className="bg-gradient-to-r from-neutral-800 to-neutral-900 px-6 py-5 border-b border-neutral-700/50">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-[#FF5A00]/10 rounded-lg border border-[#FF5A00]/20">
+              <svg className="w-6 h-6 text-[#FF5A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
-              <p className="text-gray-600 mt-1">Manage platform announcements and updates</p>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Announcements</h1>
+              <p className="text-gray-400 mt-1">Manage platform announcements and updates</p>
             </div>
           </div>
           <button 
-            className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
+            className="flex items-center justify-center space-x-2 bg-[#FF5A00] hover:bg-[#FF5A00]/90 text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-[#FF5A00]/20 hover:shadow-[#FF5A00]/30 hover:scale-105 active:scale-95"
             type="button" 
             onClick={() => setShowForm(true)}
           >
@@ -151,12 +151,12 @@ return (
       {/* Error Alert */}
       {error && (
         <div className="mx-6 mt-4 animate-fade-in">
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg">
+          <div className="bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-lg">
             <div className="flex items-center">
               <svg className="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <p className="text-red-700 text-sm font-medium">{error}</p>
+              <p className="text-red-400 text-sm font-medium">{error}</p>
             </div>
           </div>
         </div>
@@ -166,67 +166,67 @@ return (
       <div className="p-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading announcements...</p>
-            <p className="text-gray-400 text-sm mt-1">Please wait a moment</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A00] mb-4"></div>
+            <p className="text-gray-300 text-lg">Loading announcements...</p>
+            <p className="text-gray-500 text-sm mt-1">Please wait a moment</p>
           </div>
         ) : announcements.length === 0 ? (
           <div className="text-center py-12">
-            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mx-auto w-24 h-24 bg-neutral-800 rounded-full flex items-center justify-center mb-4 border border-neutral-700">
+              <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No announcements yet</h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            <h3 className="text-lg font-medium text-white mb-2">No announcements yet</h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
               Get started by creating your first announcement to share important updates with users.
             </p>
             <button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+              className="bg-[#FF5A00] hover:bg-[#FF5A00]/90 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 shadow-lg shadow-[#FF5A00]/20"
               onClick={() => setShowForm(true)}
             >
               Create First Announcement
             </button>
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-neutral-800/50 rounded-xl border border-neutral-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-100/80 border-b border-gray-200">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <tr className="bg-neutral-800/80 border-b border-neutral-700">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                       Announcement
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                       Priority
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                       Created Date
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-neutral-700 bg-neutral-800/30">
                   {announcements.map((announcement) => (
-                    <tr key={announcement._id} className="hover:bg-blue-50/30 transition-colors duration-150 group">
+                    <tr key={announcement._id} className="hover:bg-neutral-700/30 transition-colors duration-150 group">
                       <td className="px-6 py-4">
                         <div className="flex flex-col space-y-1">
                           <div className="flex items-center space-x-2">
-                            <strong className="text-base font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                            <strong className="text-base font-semibold text-white group-hover:text-[#FF5A00] transition-colors">
                               {announcement.title}
                             </strong>
                             {announcement.status === 'published' && (
-                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                              <span className="bg-green-500/10 text-green-400 text-xs px-2 py-1 rounded-full font-medium border border-green-500/20">
                                 Live
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 leading-relaxed">
+                          <p className="text-sm text-gray-400 leading-relaxed">
                             {announcement.content.substring(0, 120)}
                             {announcement.content.length > 120 && '...'}
                           </p>
@@ -236,19 +236,19 @@ return (
                         <StatusPill value={announcement.status} />
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${
                           announcement.priority === 'high' 
-                            ? 'bg-red-100 text-red-800 border border-red-200' 
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20' 
                             : announcement.priority === 'medium' 
-                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                            : 'bg-green-100 text-green-800 border border-green-200'
+                            ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                            : 'bg-green-500/10 text-green-400 border-green-500/20'
                         }`}>
                           {announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-white">
                             {formatDate(announcement.createdAt)}
                           </span>
                           <span className="text-xs text-gray-500">
@@ -259,16 +259,15 @@ return (
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <select
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                            className="border border-neutral-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] bg-neutral-800 text-white transition-all duration-200"
                             value={announcement.status}
                             onChange={(e) => handleStatusUpdate(announcement._id, e.target.value)}
                           >
                             <option value="draft">Draft</option>
                             <option value="published">Publish</option>
-                            
                           </select>
                           <button
-                            className="flex items-center space-x-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-sm"
+                            className="flex items-center space-x-1 bg-neutral-700 border border-neutral-600 hover:bg-neutral-600 text-gray-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-sm"
                             type="button"
                             onClick={() => handleEdit(announcement)}
                           >
@@ -278,7 +277,7 @@ return (
                             <span>Edit</span>
                           </button>
                           <button
-                            className="flex items-center space-x-1 bg-white border border-red-200 hover:bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-sm"
+                            className="flex items-center space-x-1 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 hover:text-red-300 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-sm"
                             type="button"
                             onClick={() => handleDelete(announcement._id)}
                           >

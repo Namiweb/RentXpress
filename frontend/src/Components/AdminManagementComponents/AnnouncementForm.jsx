@@ -50,40 +50,40 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
     onSubmit(payload);
   };
 
- return (
+return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn"
       onClick={onClose}
     >
       <form 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scaleIn"
+        className="bg-gradient-to-br from-neutral-800 via-neutral-800 to-neutral-900 border border-neutral-700/50 rounded-2xl shadow-2xl shadow-black/50 w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scaleIn"
         onSubmit={handleSubmit} 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <header className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-200">
+        <header className="bg-gradient-to-r from-neutral-800 to-neutral-900 px-6 py-5 border-b border-neutral-700/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-[#FF5A00]/10 rounded-lg border border-[#FF5A00]/20">
+                <svg className="w-6 h-6 text-[#FF5A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                   {announcement ? "Edit Announcement" : "Create New Announcement"}
                 </h2>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-400 mt-1">
                   {announcement ? "Update announcement details" : "Create a new platform announcement"}
                 </p>
               </div>
             </div>
             <button 
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 group"
+              className="p-2 hover:bg-neutral-700 rounded-lg transition-colors duration-200 group"
               type="button" 
               onClick={onClose}
             >
-              <svg className="w-6 h-6 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -95,11 +95,11 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
           <div className="space-y-6">
             {/* Title Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Title <span className="text-red-400">*</span>
               </label>
               <input
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 placeholder-gray-500 text-white"
                 placeholder="Enter announcement title..."
                 name="title"
                 value={formData.title}
@@ -112,28 +112,27 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Status Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Status
                 </label>
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
                 >
                   <option value="draft" required>Draft</option>
                   <option value="published" required>Published</option>
-                  
                 </select>
               </div>
               
               {/* Priority Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Priority
                 </label>
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 text-white"
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
@@ -145,16 +144,13 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
               </div>
             </div>
 
-            {/* Expiry Date Field */}
-
-
             {/* Content Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Content <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Content <span className="text-red-400">*</span>
               </label>
               <textarea
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 resize-none"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-600/50 rounded-xl focus:ring-2 focus:ring-[#FF5A00] focus:border-[#FF5A00] transition-all duration-200 placeholder-gray-500 text-white resize-none"
                 placeholder="Write your announcement content here..."
                 name="content"
                 rows={5}
@@ -162,17 +158,17 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
                 onChange={handleChange}
                 required
               />
-              <div className="flex justify-between items-center mt-2">
-                <p className="text-sm text-gray-500">
-                  Character count: {formData.content.length}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-2 gap-2">
+                <p className="text-sm text-gray-400">
+                  Character count: <span className="text-white font-medium">{formData.content.length}</span>
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm">
                   {formData.content.length > 500 ? (
-                    <span className="text-orange-500 font-medium">
+                    <span className="text-orange-400 font-medium">
                       Consider breaking into shorter paragraphs
                     </span>
                   ) : (
-                    "Keep it clear and concise"
+                    <span className="text-gray-400">Keep it clear and concise</span>
                   )}
                 </p>
               </div>
@@ -181,9 +177,9 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
         </div>
 
         {/* Footer */}
-        <footer className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <footer className="px-6 py-4 bg-neutral-800/50 border-t border-neutral-700/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-2 text-sm text-gray-400">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -191,7 +187,7 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
             </div>
             <div className="flex space-x-3">
               <button 
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200 flex items-center space-x-2"
+                className="px-6 py-3 border border-neutral-600 text-gray-300 rounded-xl font-medium hover:bg-neutral-700 hover:text-white transition-all duration-200 flex items-center space-x-2"
                 type="button" 
                 onClick={onClose}
               >
@@ -201,7 +197,7 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
                 <span>Cancel</span>
               </button>
               <button 
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm hover:shadow-md"
+                className="px-6 py-3 bg-[#FF5A00] text-white rounded-xl font-medium hover:bg-[#FF5A00]/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-lg shadow-[#FF5A00]/20 hover:shadow-[#FF5A00]/30"
                 type="submit" 
                 disabled={isSubmitting}
               >
@@ -225,24 +221,6 @@ const AnnouncementForm = ({ announcement, onClose, onSubmit, isSubmitting }) => 
           </div>
         </footer>
       </form>
-
-      {/* Add these animations to your CSS */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.9); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-scaleIn {
-          animation: scaleIn 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
