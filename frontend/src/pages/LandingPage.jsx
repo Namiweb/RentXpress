@@ -245,12 +245,12 @@ function LandingPage() {
       {/* Footer */}
       <footer
         id="contact"
-        className="bg-gray-900 text-white pt-16 pb-8"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.98)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+        className="bg-neutral-900 text-white pt-16 pb-8"
+        // style={{
+        //   backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.98)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
+        //   backgroundSize: 'cover',
+        //   backgroundPosition: 'center'
+        // }}
       >
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">

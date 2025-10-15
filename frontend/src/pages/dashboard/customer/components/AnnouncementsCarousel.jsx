@@ -106,7 +106,7 @@ function AnnouncementsCarousel() {
       <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#FF5A00] rounded-full blur-2xl opacity-10"></div>
       <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#FF5A00] rounded-full blur-2xl opacity-5"></div>
       
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl bg-neutral-800 border border-neutral-800 shadow-2xl">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
@@ -196,7 +196,7 @@ function AnnouncementsCarousel() {
       {slides.length > 1 && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
           <div 
-            className="h-full bg-[#FF5A00] transition-all duration-1000 ease-linear"
+            className="h-full bg-[#FFFFFF] transition-all duration-1000 ease-linear"
             style={{ 
               width: `${(activeIndex + 1) / slides.length * 100}%` 
             }}

@@ -866,7 +866,7 @@ function CustomerDashboard() {
   };
 
   return (
-    <div className="customer-dashboard">
+    <div className="customer-dashboard min-h-screen bg-neutral-800 text-white">
       <CustomerNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -874,7 +874,7 @@ function CustomerDashboard() {
         onLogout={logout}
       />
 
-      <main className="customer-main">
+      <main className="container mx-auto px-4 py-6 bg-neutral-700">
         <DashboardHero activeTab={activeTab} user={user} />
 
         {activeTab === "vehicles" && (
@@ -944,24 +944,26 @@ function CustomerDashboard() {
       </main>
 
       {detailsModal && (
-        <div className="modal-backdrop" onClick={() => setDetailsModal(null)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <header className="modal-header">
-              <div>
-                <h3>
-                  {detailsModal.basicInfo?.make} {detailsModal.basicInfo?.model}
-                  {detailsModal.basicInfo?.year ? ` (${detailsModal.basicInfo.year})` : ""}
-                </h3>
-                <p>{detailsModal.location?.city || "Unknown city"}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" onClick={() => setDetailsModal(null)}>
+          <div className="bg-neutral-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <header className="bg-neutral-700 px-6 py-4 rounded-t-xl border-b border-neutral-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    {detailsModal.basicInfo?.make} {detailsModal.basicInfo?.model}
+                    {detailsModal.basicInfo?.year ? ` (${detailsModal.basicInfo.year})` : ""}
+                  </h3>
+                  <p className="text-neutral-300">{detailsModal.location?.city || "Unknown city"}</p>
+                </div>
+                <button className="text-neutral-300 hover:text-white text-2xl font-bold transition-colors" type="button" onClick={() => setDetailsModal(null)}>
+                  ×
+                </button>
               </div>
-              <button className="close-button" type="button" onClick={() => setDetailsModal(null)}>
-                ×
-              </button>
             </header>
-            <div className="modal-body">
+            <div className="p-6 space-y-6">
               <section>
-                <h4>Current status</h4>
-                <p>
+                <h4 className="text-lg font-semibold text-white mb-2">Current status</h4>
+                <p className="text-neutral-300">
                   {detailsModal.status === "approved"
                     ? detailsModal.availability?.isAvailable === false
                       ? "Currently booked"
@@ -969,34 +971,34 @@ function CustomerDashboard() {
                     : `Status: ${detailsModal.status || "pending"}`}
                 </p>
               </section>
-              <section className="vehicle-detail-grid">
-                <div>
-                  <strong>Category</strong>
-                  <p>{detailsModal.details?.category || "N/A"}</p>
+              <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Category</strong>
+                  <p className="text-white">{detailsModal.details?.category || "N/A"}</p>
                 </div>
-                <div>
-                  <strong>Fuel</strong>
-                  <p>{detailsModal.details?.fuelType || "N/A"}</p>
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Fuel</strong>
+                  <p className="text-white">{detailsModal.details?.fuelType || "N/A"}</p>
                 </div>
-                <div>
-                  <strong>Transmission</strong>
-                  <p>{detailsModal.details?.transmission || "N/A"}</p>
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Transmission</strong>
+                  <p className="text-white">{detailsModal.details?.transmission || "N/A"}</p>
                 </div>
-                <div>
-                  <strong>Seats</strong>
-                  <p>{detailsModal.details?.seatingCapacity || "N/A"}</p>
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Seats</strong>
+                  <p className="text-white">{detailsModal.details?.seatingCapacity || "N/A"}</p>
                 </div>
-                <div>
-                  <strong>Daily rate</strong>
-                  <p>{formatCurrency(detailsModal.pricing?.dailyRate)} / day</p>
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Daily rate</strong>
+                  <p className="text-white">{formatCurrency(detailsModal.pricing?.dailyRate)} / day</p>
                 </div>
-                <div>
-                  <strong>Location</strong>
-                  <p>{detailsModal.location?.address || detailsModal.location?.city || "N/A"}</p>
+                <div className="bg-neutral-700 p-3 rounded-lg">
+                  <strong className="text-neutral-300 block text-sm">Location</strong>
+                  <p className="text-white">{detailsModal.location?.address || detailsModal.location?.city || "N/A"}</p>
                 </div>
               </section>
               <section>
-                <h4>Features</h4>
+                <h4 className="text-lg font-semibold text-white mb-3">Features</h4>
                 {(() => {
                   const rawFeatures = detailsModal.details?.features;
                   const featureList = Array.isArray(rawFeatures)
@@ -1008,30 +1010,30 @@ function CustomerDashboard() {
                           .filter(Boolean);
                   if (Array.isArray(featureList) && featureList.length > 0) {
                     return (
-                      <ul className="chip-list">
+                      <div className="flex flex-wrap gap-2">
                         {featureList.map((feature, index) => (
-                          <li key={`${feature}-${index}`} className="chip">
+                          <span key={`${feature}-${index}`} className="bg-green-700 text-white px-3 py-1 rounded-full text-sm">
                             {feature}
-                          </li>
+                          </span>
                         ))}
-                      </ul>
+                      </div>
                     );
                   }
-                  return <p className="muted">No additional features listed.</p>;
+                  return <p className="text-neutral-400">No additional features listed.</p>;
                 })()}
               </section>
               <section>
-                <h4>Description</h4>
-                <p>{detailsModal.details?.description || "No description provided."}</p>
+                <h4 className="text-lg font-semibold text-white mb-2">Description</h4>
+                <p className="text-neutral-300">{detailsModal.details?.description || "No description provided."}</p>
               </section>
             </div>
-            <footer className="modal-footer">
-              <button className="btn btn-secondary" type="button" onClick={() => setDetailsModal(null)}>
+            <footer className="bg-neutral-700 px-6 py-4 rounded-b-xl border-t border-neutral-700 flex justify-between items-center">
+              <button className="bg-neutral-500 hover:bg-neutral-400 text-white px-6 py-2 rounded-lg transition-colors" type="button" onClick={() => setDetailsModal(null)}>
                 Close
               </button>
               {detailsModal.status === "approved" && detailsModal.availability?.isAvailable !== false && (
                 <button
-                  className="btn"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                   type="button"
                   onClick={() => {
                     handleOpenBooking(detailsModal);
@@ -1042,7 +1044,7 @@ function CustomerDashboard() {
                 </button>
               )}
               {detailsModal.status === "approved" && detailsModal.availability?.isAvailable === false && (
-                <span className="muted">Vehicle is booked for the current period.</span>
+                <span className="text-neutral-400">Vehicle is booked for the current period.</span>
               )}
             </footer>
           </div>
@@ -1051,7 +1053,7 @@ function CustomerDashboard() {
 
       {bookingModal && (
         <div
-          className="modal-backdrop"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
           onClick={() => {
             setBookingModal(null);
             setModalStage("booking");
@@ -1062,87 +1064,102 @@ function CustomerDashboard() {
             setPaymentError("");
           }}
         >
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <header className="modal-header">
-              <div>
-                <h3>
-                  {modalStage === "booking" ? "Book" : "Complete payment for"} {bookingModal.basicInfo?.make} {bookingModal.basicInfo?.model}
-                </h3>
-                <p>{bookingModal.location?.city || "Unknown city"}</p>
+          <div className="bg-neutral-800 rounded-xl shadow-2xl max-w-md w-full" onClick={(event) => event.stopPropagation()}>
+            <header className="bg-neutral-700 px-6 py-4 rounded-t-xl border-b border-neutral-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    {modalStage === "booking" ? "Book" : "Complete payment for"} {bookingModal.basicInfo?.make} {bookingModal.basicInfo?.model}
+                  </h3>
+                  <p className="text-neutral-300">{bookingModal.location?.city || "Unknown city"}</p>
+                </div>
+                <button
+                  className="text-neutral-300 hover:text-white text-2xl font-bold transition-colors"
+                  type="button"
+                  onClick={() => {
+                    setBookingModal(null);
+                    setModalStage("booking");
+                    setPaymentContext(null);
+                    setBookingForm(initialBookingForm);
+                    setPaymentForm(initialPaymentForm);
+                    setBookingError("");
+                    setPaymentError("");
+                  }}
+                >
+                  ×
+                </button>
               </div>
-              <button
-                className="close-button"
-                type="button"
-                onClick={() => {
-                  setBookingModal(null);
-                  setModalStage("booking");
-                  setPaymentContext(null);
-                  setBookingForm(initialBookingForm);
-                  setPaymentForm(initialPaymentForm);
-                  setBookingError("");
-                  setPaymentError("");
-                }}
-              >
-                ×
-              </button>
             </header>
 
             {modalStage === "booking" && (
-              <form className="form-grid" onSubmit={submitBooking}>
-                <label>
-                  Start date
+              <form className="p-6 space-y-4" onSubmit={submitBooking}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Start date</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="startDate"
+                      type="date"
+                      value={bookingForm.startDate}
+                      onChange={handleBookingFormChange}
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">End date</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="endDate"
+                      type="date"
+                      value={bookingForm.endDate}
+                      onChange={handleBookingFormChange}
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Pickup time</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="pickupTime"
+                      type="time"
+                      value={bookingForm.pickupTime}
+                      onChange={handleBookingFormChange}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Return time</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="returnTime"
+                      type="time"
+                      value={bookingForm.returnTime}
+                      onChange={handleBookingFormChange}
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Drop-off address / destination</span>
                   <input
-                    name="startDate"
-                    type="date"
-                    value={bookingForm.startDate}
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    name="destination"
+                    value={bookingForm.destination}
                     onChange={handleBookingFormChange}
-                    required
                   />
                 </label>
-                <label>
-                  End date
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Purpose of trip</span>
                   <input
-                    name="endDate"
-                    type="date"
-                    value={bookingForm.endDate}
-                    onChange={handleBookingFormChange}
-                    required
-                  />
-                </label>
-                <label>
-                  Pickup time
-                  <input
-                    name="pickupTime"
-                    type="time"
-                    value={bookingForm.pickupTime}
-                    onChange={handleBookingFormChange}
-                  />
-                </label>
-                <label>
-                  Return time
-                  <input
-                    name="returnTime"
-                    type="time"
-                    value={bookingForm.returnTime}
-                    onChange={handleBookingFormChange}
-                  />
-                </label>
-                <label>
-                  Drop-off address / destination
-                  <input name="destination" value={bookingForm.destination} onChange={handleBookingFormChange} />
-                </label>
-                <label>
-                  Purpose of trip
-                  <input
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="reason"
                     value={bookingForm.reason}
                     onChange={handleBookingFormChange}
                     placeholder="Business, family trip, etc."
                   />
                 </label>
-                <label>
-                  Expected kilometers
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Expected kilometers</span>
                   <input
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="expectedKm"
                     type="number"
                     min="0"
@@ -1150,40 +1167,49 @@ function CustomerDashboard() {
                     onChange={handleBookingFormChange}
                   />
                 </label>
-                <label className="checkbox">
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     name="withDriver"
                     checked={bookingForm.withDriver}
                     onChange={handleBookingFormChange}
+                    className="w-4 h-4 text-orange-500 bg-neutral-600 border-neutral-500 rounded focus:ring-orange-500"
                   />
-                  Require a driver
+                  <span className="text-neutral-300">Require a driver</span>
                 </label>
                 {bookingForm.withDriver && (
-                  <p className="muted">
+                  <p className="text-neutral-400 text-sm">
                     Driver fee estimated at {formatCurrency((Number(bookingForm.expectedKm) || 0) * 50)} (LKR 50 per km)
                   </p>
                 )}
-                {bookingError && <p className="error-text">{bookingError}</p>}
-                <button className="btn" type="submit" disabled={bookingSubmitting}>
+                {bookingError && <p className="text-red-400 text-sm">{bookingError}</p>}
+                <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50" type="submit" disabled={bookingSubmitting}>
                   {bookingSubmitting ? "Submitting..." : "Confirm booking"}
                 </button>
               </form>
             )}
 
             {modalStage === "payment" && paymentContext && (
-              <form className="form-grid" onSubmit={submitPayment}>
-                <p>
-                  Booking <strong>{paymentContext.bookingId || paymentContext._id}</strong> totals {formatCurrency(paymentContext.pricing?.totalAmount)}
-                </p>
-                {paymentContext.pricing?.driverFee ? (
-                  <p className="muted">
-                    Base rental {formatCurrency(paymentContext.pricing?.subtotal)} + driver fee {formatCurrency(paymentContext.pricing?.driverFee)} (LKR 50 per km)
+              <form className="p-6 space-y-4" onSubmit={submitPayment}>
+                <div className="bg-neutral-600 p-4 rounded-lg">
+                  <p className="text-white">
+                    Booking <strong>{paymentContext.bookingId || paymentContext._id}</strong> totals {formatCurrency(paymentContext.pricing?.totalAmount)}
                   </p>
-                ) : null}
-                <label>
-                  Payment method
-                  <select name="paymentMethod" value={paymentForm.paymentMethod} onChange={handlePaymentChange} required>
+                  {paymentContext.pricing?.driverFee ? (
+                    <p className="text-neutral-400 text-sm mt-1">
+                      Base rental {formatCurrency(paymentContext.pricing?.subtotal)} + driver fee {formatCurrency(paymentContext.pricing?.driverFee)} (LKR 50 per km)
+                    </p>
+                  ) : null}
+                </div>
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Payment method</span>
+                  <select 
+                    className="w-full bg-neutral-600 border border-neutral-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    name="paymentMethod" 
+                    value={paymentForm.paymentMethod} 
+                    onChange={handlePaymentChange} 
+                    required
+                  >
                     {PAYMENT_METHODS.map((method) => (
                       <option key={method.value} value={method.value}>
                         {method.label}
@@ -1191,9 +1217,10 @@ function CustomerDashboard() {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Amount (LKR)
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Amount (LKR)</span>
                   <input
+                    className="w-full bg-neutral-600 border border-neutral-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="amount"
                     type="number"
                     min="0"
@@ -1202,8 +1229,8 @@ function CustomerDashboard() {
                     required
                   />
                 </label>
-                {paymentError && <p className="error-text">{paymentError}</p>}
-                <button className="btn" type="submit" disabled={paymentSubmitting}>
+                {paymentError && <p className="text-red-400 text-sm">{paymentError}</p>}
+                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50" type="submit" disabled={paymentSubmitting}>
                   {paymentSubmitting ? "Processing..." : "Pay & finish"}
                 </button>
               </form>
@@ -1213,22 +1240,25 @@ function CustomerDashboard() {
       )}
 
       {feedbackModalBooking && (
-        <div className="modal-backdrop" onClick={closeFeedbackModal}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <header className="modal-header">
-              <div>
-                <h3>{isEditingFeedback ? "Update your feedback" : "Share your feedback"}</h3>
-                <p>{feedbackModalHeaderLabel}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" onClick={closeFeedbackModal}>
+          <div className="bg-neutral-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <header className="bg-neutral-700 px-6 py-4 rounded-t-xl border-b border-neutral-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{isEditingFeedback ? "Update your feedback" : "Share your feedback"}</h3>
+                  <p className="text-neutral-300">{feedbackModalHeaderLabel}</p>
+                </div>
+                <button className="text-neutral-300 hover:text-white text-2xl font-bold transition-colors" type="button" onClick={closeFeedbackModal}>
+                  ×
+                </button>
               </div>
-              <button className="close-button" type="button" onClick={closeFeedbackModal}>
-                ×
-              </button>
             </header>
-            <div className="modal-content">
-              <form className="form-grid" onSubmit={submitFeedback}>
-                <label>
-                  Completed booking
+            <div className="p-6">
+              <form className="space-y-4" onSubmit={submitFeedback}>
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Completed booking</span>
                   <select
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
                     name="bookingId"
                     value={feedbackForm.bookingId}
                     onChange={handleFeedbackChange}
@@ -1247,92 +1277,102 @@ function CustomerDashboard() {
                     )}
                   </select>
                 </label>
-                {feedbackTripWindow && <p className="muted">{feedbackTripWindow}</p>}
-                <label>
-                  Vehicle rating (1-5)
-                  <input
-                    name="vehicleRating"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={feedbackForm.vehicleRating}
-                    onChange={handleFeedbackChange}
-                  />
-                </label>
-                {canRateDriver && (
-                  <label>
-                    Driver rating (1-5)
+                {feedbackTripWindow && <p className="text-neutral-400 text-sm">{feedbackTripWindow}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Vehicle rating (1-5)</span>
                     <input
-                      name="driverRating"
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="vehicleRating"
                       type="number"
                       min="1"
                       max="5"
-                      value={feedbackForm.driverRating}
+                      value={feedbackForm.vehicleRating}
                       onChange={handleFeedbackChange}
                     />
                   </label>
-                )}
-                <label>
-                  Service rating (1-5)
-                  <input
-                    name="serviceRating"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={feedbackForm.serviceRating}
-                    onChange={handleFeedbackChange}
-                  />
-                </label>
-                <label>
-                  Overall rating (1-5)
-                  <input
-                    name="overallRating"
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={feedbackForm.overallRating}
-                    onChange={handleFeedbackChange}
-                    required
-                  />
-                </label>
-                <label>
-                  Vehicle comments
+                  {canRateDriver && (
+                    <label className="block">
+                      <span className="text-neutral-300 text-sm font-medium mb-1 block">Driver rating (1-5)</span>
+                      <input
+                        className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        name="driverRating"
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={feedbackForm.driverRating}
+                        onChange={handleFeedbackChange}
+                      />
+                    </label>
+                  )}
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Service rating (1-5)</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="serviceRating"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={feedbackForm.serviceRating}
+                      onChange={handleFeedbackChange}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-neutral-300 text-sm font-medium mb-1 block">Overall rating (1-5)</span>
+                    <input
+                      className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      name="overallRating"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={feedbackForm.overallRating}
+                      onChange={handleFeedbackChange}
+                      required
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Vehicle comments</span>
                   <textarea
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="vehicleComment"
                     rows={2}
                     value={feedbackForm.vehicleComment}
                     onChange={handleFeedbackChange}
                   />
                 </label>
-                <label>
-                  Service comments
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Service comments</span>
                   <textarea
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="serviceComment"
                     rows={2}
                     value={feedbackForm.serviceComment}
                     onChange={handleFeedbackChange}
                   />
                 </label>
-                <label>
-                  Suggestions
+                <label className="block">
+                  <span className="text-neutral-300 text-sm font-medium mb-1 block">Suggestions</span>
                   <textarea
+                    className="w-full bg-neutral-700 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     name="suggestions"
                     rows={2}
                     value={feedbackForm.suggestions}
                     onChange={handleFeedbackChange}
                   />
                 </label>
-                <label className="checkbox">
+                <label className="flex items-center space-x-2">
                   <input
                     name="wouldRecommend"
                     type="checkbox"
                     checked={feedbackForm.wouldRecommend}
                     onChange={handleFeedbackChange}
+                    className="w-4 h-4 text-orange-500 bg-neutral-600 border-neutral-500 rounded focus:ring-orange-500"
                   />
-                  Would recommend to others
+                  <span className="text-neutral-300">Would recommend to others</span>
                 </label>
-                {feedbackError && <p className="error-text">{feedbackError}</p>}
-                <button className="btn" type="submit" disabled={feedbackSubmitting}>
+                {feedbackError && <p className="text-red-400 text-sm">{feedbackError}</p>}
+                <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50" type="submit" disabled={feedbackSubmitting}>
                   {feedbackSubmitting
                     ? isEditingFeedback
                       ? "Updating..."
@@ -1348,26 +1388,28 @@ function CustomerDashboard() {
       )}
 
       {selectedBooking && (
-        <div className="modal-backdrop" onClick={() => setSelectedBooking(null)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
-            <header className="modal-header">
-              <div>
-                <h3>Booking details</h3>
-                <p>
-                  {selectedBooking.bookingId || selectedBooking._id} · {getBookingVehicleName(selectedBooking)}
-                </p>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" onClick={() => setSelectedBooking(null)}>
+          <div className="bg-neutral-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+            <header className="bg-neutral-700 px-6 py-4 rounded-t-xl border-b border-neutral-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Booking details</h3>
+                  <p className="text-neutral-300">
+                    {selectedBooking.bookingId || selectedBooking._id} · {getBookingVehicleName(selectedBooking)}
+                  </p>
+                </div>
+                <button className="text-neutral-300 hover:text-white text-2xl font-bold transition-colors" type="button" onClick={() => setSelectedBooking(null)}>
+                  ×
+                </button>
               </div>
-              <button className="close-button" type="button" onClick={() => setSelectedBooking(null)}>
-                ×
-              </button>
             </header>
-            <div className="modal-content">
-              <section className="details-section">
-                <h4>Trip summary</h4>
-                <dl className="details-list">
+            <div className="p-6 space-y-6">
+              <section className="bg-neutral-700 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-white mb-3">Trip summary</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <dt>Start</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Start</dt>
+                    <dd className="text-white">
                       {selectedBooking.bookingDetails?.startDate
                         ? `${formatDate(selectedBooking.bookingDetails.startDate)}${
                             selectedBooking.bookingDetails?.pickupTime
@@ -1378,8 +1420,8 @@ function CustomerDashboard() {
                     </dd>
                   </div>
                   <div>
-                    <dt>Return</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Return</dt>
+                    <dd className="text-white">
                       {selectedBooking.bookingDetails?.endDate
                         ? `${formatDate(selectedBooking.bookingDetails.endDate)}${
                             selectedBooking.bookingDetails?.returnTime
@@ -1390,8 +1432,8 @@ function CustomerDashboard() {
                     </dd>
                   </div>
                   <div>
-                    <dt>Pickup location</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Pickup location</dt>
+                    <dd className="text-white">
                       {[
                         selectedBooking.pickupLocation?.address,
                         selectedBooking.pickupLocation?.city,
@@ -1402,8 +1444,8 @@ function CustomerDashboard() {
                     </dd>
                   </div>
                   <div>
-                    <dt>Drop-off location</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Drop-off location</dt>
+                    <dd className="text-white">
                       {[
                         selectedBooking.dropoffLocation?.address,
                         selectedBooking.dropoffLocation?.city,
@@ -1413,14 +1455,14 @@ function CustomerDashboard() {
                         .join(", ") || "Not specified"}
                     </dd>
                   </div>
-                </dl>
+                </div>
               </section>
-              <section className="details-section">
-                <h4>Pricing</h4>
-                <dl className="details-list">
+              <section className="bg-neutral-700 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-white mb-3">Pricing</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <dt>Total amount</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Total amount</dt>
+                    <dd className="text-white">
                       {formatCurrency(
                         selectedBooking.pricing?.totalAmount,
                         selectedBooking.pricing?.currency,
@@ -1428,8 +1470,8 @@ function CustomerDashboard() {
                     </dd>
                   </div>
                   <div>
-                    <dt>Daily rate</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Daily rate</dt>
+                    <dd className="text-white">
                       {formatCurrency(
                         selectedBooking.pricing?.dailyRate,
                         selectedBooking.pricing?.currency,
@@ -1437,39 +1479,39 @@ function CustomerDashboard() {
                     </dd>
                   </div>
                   <div>
-                    <dt>Total days</dt>
-                    <dd>
+                    <dt className="text-neutral-300 text-sm">Total days</dt>
+                    <dd className="text-white">
                       {selectedBooking.bookingDetails?.totalDays
                         || selectedBooking.pricing?.totalDays
                         || "-"}
                     </dd>
                   </div>
-                </dl>
+                </div>
               </section>
-              <section className="details-section">
-                <h4>Driver & notes</h4>
-                <dl className="details-list">
+              <section className="bg-neutral-700 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-white mb-3">Driver & notes</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <dt>Driver requested</dt>
-                    <dd>{selectedBooking.driverRequested ? "Yes" : "No"}</dd>
+                    <dt className="text-neutral-300 text-sm">Driver requested</dt>
+                    <dd className="text-white">{selectedBooking.driverRequested ? "Yes" : "No"}</dd>
                   </div>
                   {selectedBooking.driverRequested && (
                     <div>
-                      <dt>Driver status</dt>
-                      <dd>{selectedBooking.driverStatus || "pending"}</dd>
+                      <dt className="text-neutral-300 text-sm">Driver status</dt>
+                      <dd className="text-white">{selectedBooking.driverStatus || "pending"}</dd>
                     </div>
                   )}
                   {selectedBooking.notes && (
-                    <div>
-                      <dt>Notes</dt>
-                      <dd>{selectedBooking.notes}</dd>
+                    <div className="md:col-span-2">
+                      <dt className="text-neutral-300 text-sm">Notes</dt>
+                      <dd className="text-white">{selectedBooking.notes}</dd>
                     </div>
                   )}
-                </dl>
+                </div>
               </section>
             </div>
-            <footer className="modal-footer">
-              <button className="btn" type="button" onClick={() => setSelectedBooking(null)}>
+            <footer className="bg-neutral-700 px-6 py-4 rounded-b-xl border-t border-neutral-700">
+              <button className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg font-semibold transition-colors" type="button" onClick={() => setSelectedBooking(null)}>
                 Close
               </button>
             </footer>
