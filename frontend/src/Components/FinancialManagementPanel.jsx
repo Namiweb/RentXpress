@@ -70,25 +70,7 @@ function FinancialManagementPanel() {
     fetchAdvancedPaymentDetails();
   }, [filterType]);
 
-  // Calculate salaries
-  // const handleCalculateSalaries = async () => {
-  //   setError("");
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await apiRequest("/financial/calculate-salaries", {
-  //       method: "POST",
-  //       body: JSON.stringify(selectedPeriod)
-  //     });
-  //     const data = await response.json();
-  //     if (!response.ok) throw new Error(data.message);
-      
-  //     await fetchFinancialData();
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+
 
   // Process payments
   const handleProcessPayments = async (financialIds) => {
@@ -136,30 +118,7 @@ function FinancialManagementPanel() {
             Manage salaries, payouts, and financial records
           </p>
         </div>
-        <div className="flex items-center space-x-4">
-          {/*
-          <PeriodSelector 
-            period={selectedPeriod} 
-            onChange={setSelectedPeriod} 
-          />
-          <button 
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            onClick={handleCalculateSalaries}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Calculating...</span>
-              </>
-            ) : (
-              <>
-                <span>💰</span>
-                <span>Calculate Salaries</span>
-              </>
-            )}
-          </button>*/}
-        </div>
+  
       </header>
 
       {error && (
@@ -708,317 +667,345 @@ function ConfigDisplay({ config, onEdit, role }) {
         </div>
       )}
       
-      <button 
-        className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center space-x-2"
-        onClick={onEdit}
-      >
-        <span>✏️</span>
-        <span>Edit Configuration</span>
-      </button>
+      {/* <button 
+  className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={onEdit}
+  disabled={true}
+>
+  <span>✏️</span>
+  <span>Edit Configuration</span>
+</button> */}
     </div>
   );
 }
 
 function FinancialRecordsTable() {
-  const [payouts, setPayouts] = useState([])
-  const [payoutsLoading, setPayoutsLoading] = useState(false)
+  const [financials, setFinancials] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({});
+  const [filters, setFilters] = useState({
+    role: '',
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear()
+  });
 
-  const getDriverLabel = (payout) => {
-    const driver = payout?.driver || payout?.driverId;
-    if (!driver) return "-";
-    if (typeof driver === "string") return driver;
-    return getUserName(driver);
+  const fetchFinancialRecords = async () => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams();
+      if (filters.role) queryParams.append('role', filters.role);
+      if (filters.month) queryParams.append('month', filters.month);
+      if (filters.year) queryParams.append('year', filters.year);
+
+      const response = await apiRequest(`/financial/paid-records?${queryParams}`);
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message);
+      
+      setFinancials(data.financials || []);
+    } catch (error) {
+      console.error("Error fetching financial records:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const fetchPayouts = async () => {
+  const fetchFinancialStats = async () => {
     try {
-      setPayoutsLoading(true)
-      const response = await apiRequest("/Financial/payouts");
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.message || `Failed to load financial records`);
-      }
-      setPayouts(payload)
-      return payload;
+      const queryParams = new URLSearchParams();
+      if (filters.month) queryParams.append('month', filters.month);
+      if (filters.year) queryParams.append('year', filters.year);
+
+      const response = await apiRequest(`/financial/stats?${queryParams}`);
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message);
+      
+      setStats(data);
     } catch (error) {
-      console.error("An error occured: ", error)
-    } finally{
-      setPayoutsLoading(false)
+      console.error("Error fetching financial stats:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPayouts()
-  }, [])
+    fetchFinancialRecords();
+    fetchFinancialStats();
+  }, [filters]);
 
-  const handleDownloadReport = useCallback(() => {
-    if (!payouts.length) return;
+  const handleDownloadReport = () => {
+    if (!financials.length) return;
 
     const doc = new jsPDF({ orientation: "landscape", unit: "pt" });
     const marginLeft = 40;
     const headerY = 60;
     const now = new Date();
 
-    // const totalPayments = payments.reduce(
-    //   (sum, item) => sum + (Number(item.amount) || 0),
-    //   0
-    // );
-    const totalPayouts = payouts.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0),
-      0
-    );
+    // Calculate totals
+    const totalsByRole = financials.reduce((acc, record) => {
+      const role = record.recipientType;
+      if (!acc[role]) acc[role] = 0;
+      acc[role] += record.amount;
+      return acc;
+    }, {});
+
+    const totalAmount = Object.values(totalsByRole).reduce((sum, amount) => sum + amount, 0);
 
     doc.setFontSize(18);
-    doc.text("Payouts Report", marginLeft, headerY);
+    doc.text("Financial Records Report", marginLeft, headerY);
 
     doc.setFontSize(11);
     doc.text(`Generated: ${now.toLocaleString()}`, marginLeft, headerY + 20);
-    doc.text(`Payouts: ${payouts.length}`, marginLeft, headerY + 35);
-    doc.text(
-      `Totals: Payouts ${formatCurrency(totalPayouts)}`,
-      marginLeft,
-      headerY + 50
-    );
+    doc.text(`Period: ${filters.month}/${filters.year}`, marginLeft, headerY + 35);
+    doc.text(`Total Records: ${financials.length}`, marginLeft, headerY + 50);
+    doc.text(`Total Amount: ${formatCurrency(totalAmount)}`, marginLeft, headerY + 65);
 
-    let tableY = headerY + 75;
+    let tableY = headerY + 85;
 
-    // if (payments.length) {
-    //   autoTable(doc, {
-    //     startY: tableY,
-    //     head: [
-    //       ["Payment", "Booking", "Customer", "Amount", "Status", "Processed"],
-    //     ],
-    //     body: payments.map((payment) => [
-    //       payment.paymentId || payment._id,
-    //       getBookingLabel(payment),
-    //       payment.customerId ? getUserName(payment.customerId) : "-",
-    //       formatCurrency(payment.amount, payment.currency || currency),
-    //       payment.status ? payment.status.replace(/_/g, " ") : "-",
-    //       formatDateTime(
-    //         payment.updatedAt || payment.processedAt || payment.createdAt
-    //       ),
-    //     ]),
-    //     styles: { fontSize: 10, cellPadding: 6 },
-    //     headStyles: { fillColor: [17, 24, 39], textColor: 255 },
-    //     columnStyles: {
-    //       0: { halign: "center", cellWidth: 90 },
-    //       3: { halign: "right", cellWidth: 120 },
-    //       4: { halign: "center", cellWidth: 100 },
-    //     },
-    //   });
-    //   tableY = doc.lastAutoTable.finalY + 30;
-    // }
+    autoTable(doc, {
+      startY: tableY,
+      head: [["Financial ID", "Recipient", "Role", "Amount", "Period", "Payment Date", "Status"]],
+      body: financials.map((record) => [
+        record.financialId || record._id,
+        getUserName(record.recipientId),
+        record.recipientType,
+        formatCurrency(record.amount),
+        `${record.period.month}/${record.period.year}`,
+        formatDate(record.paymentDate || record.updatedAt),
+        record.status
+      ]),
+      styles: { fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [17, 24, 39], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 100 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 80 },
+        4: { cellWidth: 60 },
+        5: { cellWidth: 80 }
+      },
+    });
 
-    if (payouts.length) {
-      autoTable(doc, {
-        startY: tableY,
-        head: [["Payout", "User", "Role", "Amount", "Status", "Updated"]],
-        body: payouts.map((payout) => [
-          payout.financialId || payout._id,
-          getUserName(payout.recipientId),
-          payout.recipientType,
-          formatCurrency(payout.amount),
-          payout.status ? payout.status.replace(/_/g, " ") : "-",
-          formatDateTime(
-            payout.updatedAt || payout.processedAt || payout.createdAt
-          ),
-        ]),
-        styles: { fontSize: 10, cellPadding: 6 },
-        headStyles: { fillColor: [17, 24, 39], textColor: 255 },
-        columnStyles: {
-          0: { halign: "center", cellWidth: 120 },
-          2: { halign: "left", cellWidth: 90 },
-          3: { halign: "center", cellWidth: 100 },
-        },
-      });
-    }
+    // Add summary table
+    const summaryY = doc.lastAutoTable.finalY + 30;
+    doc.setFontSize(14);
+    doc.text("Summary by Role", marginLeft, summaryY);
 
-    doc.save("payouts-report.pdf");
-  }, [payouts]);
+    autoTable(doc, {
+      startY: summaryY + 15,
+      head: [["Role", "Total Amount", "Record Count"]],
+      body: Object.entries(totalsByRole).map(([role, amount]) => [
+        role,
+        formatCurrency(amount),
+        financials.filter(f => f.recipientType === role).length
+      ]),
+      styles: { fontSize: 10, cellPadding: 6 },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+    });
 
-  const refreshDisabled = payoutsLoading;
-  const downloadDisabled =
-    refreshDisabled || (payouts.length === 0);
+    doc.save(`financial-records-${filters.month}-${filters.year}.pdf`);
+  };
 
-  if (payoutsLoading) return (
-    <div className="p-8 text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-      <p className="mt-3 text-gray-600">Loading financial records...</p>
-    </div>
-  );
+  const roleOptions = [
+    { value: '', label: 'All Roles' },
+    { value: 'driver', label: 'Drivers' },
+    { value: 'vehicle_owner', label: 'Vehicle Owners' },
+    { value: 'inspector', label: 'Inspectors' }
+  ];
 
-  if (payouts.length === 0) return (
-    <div className="p-8 text-center">
-      <div className="text-4xl mb-3 text-gray-400">📊</div>
-      <p className="text-gray-500">No financial records found for the selected period.</p>
-    </div>
-  );
+  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: new Date(0, i).toLocaleString('en', { month: 'long' })
+  }));
+
+  const yearOptions = Array.from({ length: 5 }, (_, i) => {
+    const year = new Date().getFullYear() - 2 + i;
+    return { value: year, label: year.toString() };
+  });
 
   return (
     <section className="panel">
       <header className="panel-header">
         <div>
-          <h3>Payouts</h3>
-          <p className="panel-subtitle">Salaries, Commissions & Expenses</p>
+          <h3>Financial Records</h3>
+          <p className="panel-subtitle">All Salary Payments & Payouts</p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          {/* Filters */}
+          <select
+            value={filters.role}
+            onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+            className="input-control"
+          >
+            {roleOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.month}
+            onChange={(e) => setFilters(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+            className="input-control"
+          >
+            {monthOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.year}
+            onChange={(e) => setFilters(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+            className="input-control"
+          >
+            {yearOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
           <button
             className="btn btn-secondary"
             type="button"
             onClick={handleDownloadReport}
-            disabled={downloadDisabled}
+            disabled={loading || financials.length === 0}
           >
             Download PDF
           </button>
+          
           <button
             className="btn btn-secondary"
             type="button"
-            onClick={fetchPayouts}
-            disabled={refreshDisabled}
+            onClick={fetchFinancialRecords}
+            disabled={loading}
           >
-            Refresh
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </header>
-      <div className="two-column">
-        {/* <div className="management-subpanel">
-          <h4>Customer payments</h4>
-          {paymentsLoading ? (
-            <p>Loading payments…</p>
-          ) : payments.length === 0 ? (
-            <p>No payments recorded yet.</p>
-          ) : (
-            <div className="table-wrapper">
-              <table className="management-table">
-                <thead>
-                  <tr>
-                    <th>Payment</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr key={payment._id}>
-                      <td>
-                        <div className="cell-stack">
-                          <strong>{payment.paymentId}</strong>
-                          <span className="muted">
-                            {formatDate(
-                              payment.processedAt || payment.createdAt
-                            )}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="cell-stack">
-                          <span>{getUserName(payment.customerId)}</span>
-                          <span className="muted">
-                            {payment.customerId?.email}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        {formatCurrency(
-                          payment.amount,
-                          payment.currency || currency
-                        )}
-                      </td>
-                      <td>
-                        <StatusPill value={payment.status} />
-                      </td>
-                      <td>
-                        <div className="row-inline">
-                          <select
-                            className="input-control"
-                            value={paymentDrafts[payment._id] || payment.status}
-                            onChange={(event) =>
-                              handlePaymentDraftChange(
-                                payment._id,
-                                event.target.value
-                              )
-                            }
-                          >
-                            {paymentStatusOptions(payment).map((status) => (
-                              <option key={status} value={status}>
-                                {status.replace(/_/g, " ")}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            className="btn btn-secondary"
-                            type="button"
-                            disabled={isUpdating}
-                            onClick={() => updatePaymentStatus(payment)}
-                          >
-                            {isUpdating ? "Saving…" : "Update"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+      {/* Stats Summary */}
+      {stats.totalsByRole && stats.totalsByRole.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {stats.totalsByRole.map((roleStat) => (
+            <div key={roleStat._id} className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 capitalize">
+                    {roleStat._id || 'Unknown'}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(roleStat.totalPaid)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">
+                    {roleStat.paidCount} payments
+                  </p>
+                  {roleStat.totalPending > 0 && (
+                    <p className="text-sm text-orange-600">
+                      {formatCurrency(roleStat.totalPending)} pending
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
-        </div> */}
-        <div className="management-subpanel">
-          
-          {payoutsLoading ? (
-            <p>Loading payouts…</p>
-          ) : payouts.length === 0 ? (
-            <p>No driver payouts recorded.</p>
-          ) : (
-            <div className="table-wrapper">
-              <table className="management-table">
-                <thead>
-                  <tr>
-                    <th>Payout</th>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payouts.map((payout) => (
-                    <tr key={payout._id}>
-                      <td>
-                        <div className="cell-stack">
-                          <strong>{payout.financialId}</strong>
-                          <span className="muted">
-                            {formatDate(payout.processedAt || payout.createdAt)}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="cell-stack">
-                          <span>{getUserName(payout.recipientId)}</span>
-                          <span className="muted">
-                            {payout.recipientId?.email}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{payout.recipientType || "-"}</td>
-                      <td>{formatCurrency(payout.amount)}</td>
-                      <td>
-                        <StatusPill value={payout.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          ))}
         </div>
+      )}
+
+      {/* Records Table */}
+      <div className="management-subpanel">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-3 text-gray-600">Loading financial records...</p>
+          </div>
+        ) : financials.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="text-4xl mb-3 text-gray-400">📊</div>
+            <p className="text-gray-500">No financial records found for the selected criteria.</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="management-table">
+              <thead>
+                <tr>
+                  <th>Financial ID</th>
+                  <th>Recipient</th>
+                  <th>Role</th>
+                  <th>Amount</th>
+                  <th>Period</th>
+                  <th>Payment Date</th>
+                  <th>Status</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {financials.map((record) => (
+                  <tr key={record._id}>
+                    <td>
+                      <div className="cell-stack">
+                        <strong>{record.financialId}</strong>
+                        <span className="muted text-xs">
+                          {record.type}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cell-stack">
+                        <span>{getUserName(record.recipientId)}</span>
+                        <span className="muted text-xs">
+                          {record.recipientId?.email}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                        record.recipientType === 'driver' ? 'bg-blue-100 text-blue-800' :
+                        record.recipientType === 'vehicle_owner' ? 'bg-green-100 text-green-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {record.recipientType}
+                      </span>
+                    </td>
+                    <td className="font-semibold">
+                      {formatCurrency(record.amount)}
+                    </td>
+                    <td>
+                      {record.period.month}/{record.period.year}
+                    </td>
+                    <td>
+                      {formatDate(record.paymentDate || record.updatedAt)}
+                    </td>
+                    <td>
+                      <StatusPill value={record.status} />
+                    </td>
+                    <td>
+                      <button 
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        onClick={() => {
+                          // Show calculation details modal
+                          console.log('Calculation details:', record.calculationDetails);
+                          // You can implement a modal here to show detailed breakdown
+                        }}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-// Helper functions
 function getUserName(user) {
   if (!user) return "-";
   if (user.profile) {
