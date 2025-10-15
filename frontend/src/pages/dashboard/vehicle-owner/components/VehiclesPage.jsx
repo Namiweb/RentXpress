@@ -41,18 +41,19 @@ const formatDate = (value, withTime = false) => {
 function VehicleList({ vehicles, bookingsByVehicle, onEdit, onDelete, onToggleAvailability, isLoading }) {
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <p>Loading vehicles...</p>
+      <div className="text-center py-12 rounded-xl bg-neutral-900 border border-neutral-800">
+        <div className="w-12 h-12 rounded-full border-4 border-neutral-700 border-t-orange-500 animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-400">Loading vehicles...</p>
       </div>
     );
   }
 
   if (!vehicles.length) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <div style={{ fontSize: '48px', marginBottom: '1rem' }}>🚗</div>
-        <h4 style={{ margin: '0 0 0.5rem', color: '#374151' }}>No vehicles listed yet</h4>
-        <p style={{ margin: 0, color: '#6b7280' }}>
+      <div className="text-center py-16 rounded-xl bg-neutral-900 border border-neutral-800">
+        <div className="text-5xl mb-4">🚗</div>
+        <h4 className="text-xl font-semibold text-white mb-2">No vehicles listed yet</h4>
+        <p className="text-gray-400">
           Use the "List a Vehicle" button to add your first vehicle to the fleet.
         </p>
       </div>
@@ -60,18 +61,13 @@ function VehicleList({ vehicles, bookingsByVehicle, onEdit, onDelete, onToggleAv
   }
 
   return (
-    <div style={{ display: 'grid', gap: '1rem' }}>
+    <div className="grid gap-4">
       {vehicles.map((vehicle) => {
         const vehicleId = normalizeId(vehicle._id);
         const stats = bookingsByVehicle[vehicleId] || { active: 0, total: 0 };
         const isAvailable = vehicle.availability?.isAvailable !== false;
         const hasActiveBooking = stats.active > 0;
         const availabilityLabel = hasActiveBooking ? "Booked" : isAvailable ? "Available" : "Unavailable";
-        const statusClass = hasActiveBooking
-          ? "status-pending"
-          : isAvailable
-          ? "status-approved"
-          : "status-rejected";
         const inspectionLabel =
           inspectionStatusLabels[vehicle.inspectionStatus] || vehicle.inspectionStatus || "Pending";
         const approvalLabel = vehicle.status
@@ -81,171 +77,152 @@ function VehicleList({ vehicles, bookingsByVehicle, onEdit, onDelete, onToggleAv
         const thumbnailPreview = getMediaPreview(thumbnail);
 
         return (
-          <div key={vehicleId} style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            backgroundColor: 'white',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-          }}>
-            <div style={{ display: 'flex', gap: '1rem' }}>
+          <div 
+            key={vehicleId}
+            className="rounded-xl p-6 transition-all duration-300 hover:transform hover:scale-105 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 shadow-2xl"
+          >
+            <div className="flex gap-4">
               {thumbnailPreview && (
-                <div style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  borderRadius: '8px', 
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                  border: '1px solid #e5e7eb'
-                }}>
+                <div className="flex-shrink-0 rounded-lg overflow-hidden w-24 h-24 border border-neutral-700">
                   <img 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover' 
-                    }} 
+                    className="w-full h-full object-cover"
                     src={thumbnailPreview} 
                     alt={`${vehicle.basicInfo?.make || "Vehicle"} preview`} 
                   />
                 </div>
               )}
               
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <div>
-                    <h4 style={{ margin: '0 0 0.25rem', fontSize: '18px', fontWeight: '600' }}>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-lg font-semibold text-white mb-1 truncate">
                       {vehicle.basicInfo?.make} {vehicle.basicInfo?.model} ({vehicle.basicInfo?.year || "n/a"})
                     </h4>
-                    <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
+                    <p className="text-gray-400 text-sm truncate">
                       Plate: {vehicle.basicInfo?.licensePlate || "-"} • Category: {vehicle.details?.category || "-"} • 
                       Seats: {vehicle.details?.seatingCapacity || "-"}
                     </p>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      backgroundColor: 
-                        statusClass === 'status-pending' ? '#fef3c7' :
-                        statusClass === 'status-approved' ? '#dcfce7' : '#fee2e2',
-                      color:
-                        statusClass === 'status-pending' ? '#92400e' :
-                        statusClass === 'status-approved' ? '#166534' : '#991b1b'
-                    }}>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <span 
+                      className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                        hasActiveBooking 
+                          ? "bg-amber-500/20 text-amber-300 border-amber-500/30" 
+                          : isAvailable 
+                            ? "bg-green-500/20 text-green-300 border-green-500/30" 
+                            : "bg-red-500/20 text-red-300 border-red-500/30"
+                      }`}
+                    >
                       {availabilityLabel}
                     </span>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Approval Status</span>
-                    <p style={{ margin: '2px 0 0', fontSize: '14px' }}>{approvalLabel}</p>
+                    <span className="text-xs font-medium block mb-1 text-gray-400">Approval Status</span>
+                    <p className="text-white text-sm">{approvalLabel}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Inspection Status</span>
-                    <p style={{ margin: '2px 0 0', fontSize: '14px' }}>{inspectionLabel}</p>
+                    <span className="text-xs font-medium block mb-1 text-gray-400">Inspection Status</span>
+                    <p className="text-white text-sm">{inspectionLabel}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Active Bookings</span>
-                    <p style={{ margin: '2px 0 0', fontSize: '14px' }}>{stats.active}</p>
+                    <span className="text-xs font-medium block mb-1 text-gray-400">Active Bookings</span>
+                    <p className="text-white text-sm">{stats.active}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Total Bookings</span>
-                    <p style={{ margin: '2px 0 0', fontSize: '14px' }}>{stats.total}</p>
+                    <span className="text-xs font-medium block mb-1 text-gray-400">Total Bookings</span>
+                    <p className="text-white text-sm">{stats.total}</p>
                   </div>
                 </div>
 
                 {vehicle.lastInspection?.inspectedAt && (
-                  <p style={{ margin: '0 0 0.5rem', fontSize: '12px', color: '#6b7280' }}>
+                  <p className="text-xs mb-3 text-gray-400">
                     Last inspected: {formatDate(vehicle.lastInspection.inspectedAt, true)}
                   </p>
                 )}
 
                 {vehicle.lastInspection?.issues && (
-                  <p style={{ 
-                    margin: '0 0 0.75rem', 
-                    padding: '0.5rem', 
-                    backgroundColor: '#fee2e2', 
-                    borderRadius: '6px',
-                    fontSize: '12px', 
-                    color: '#991b1b' 
-                  }}>
-                    Inspector feedback: {vehicle.lastInspection.issues}
-                  </p>
+                  <div className="rounded-lg p-3 mb-3 bg-red-500/10 border border-red-500/20">
+                    <p className="text-xs m-0 text-red-300">
+                      <strong>Inspector feedback:</strong> {vehicle.lastInspection.issues}
+                    </p>
+                  </div>
                 )}
 
                 {!vehicle.lastInspection?.issues && vehicle.lastInspection?.notes && (
-                  <p style={{ 
-                    margin: '0 0 0.75rem', 
-                    padding: '0.5rem', 
-                    backgroundColor: '#f0f9ff', 
-                    borderRadius: '6px',
-                    fontSize: '12px', 
-                    color: '#0369a1' 
-                  }}>
-                    Inspector notes: {vehicle.lastInspection.notes}
-                  </p>
+                  <div className="rounded-lg p-3 mb-3 bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs m-0 text-blue-300">
+                      <strong>Inspector notes:</strong> {vehicle.lastInspection.notes}
+                    </p>
+                  </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {/* Action Buttons */}
+                <div className="flex gap-2 flex-wrap justify-end">
+                  {/* Edit Button - Disabled when booked */}
                   <button 
-                    type="button" 
-                    style={{
-                      padding: '8px 16px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      backgroundColor: 'white',
-                      color: '#374151',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
+                    type="button"
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      hasActiveBooking
+                        ? "bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed"
+                        : "bg-transparent border border-neutral-700 text-gray-300 hover:bg-neutral-800 hover:border-neutral-600 hover:text-white hover:transform hover:scale-105"
+                    }`}
+                    onClick={() => {
+                      if (!hasActiveBooking) {
+                        onEdit(vehicle);
+                      }
                     }}
-                    onClick={() => onEdit(vehicle)}
+                    disabled={hasActiveBooking}
+                    title={
+                      hasActiveBooking
+                        ? "Cannot edit vehicle with active bookings"
+                        : "Edit vehicle details"
+                    }
                   >
-                    Edit
+                    {hasActiveBooking ? "Cannot Edit" : "Edit"}
                   </button>
+                  
+                  {/* Toggle Availability Button - Disabled when not approved OR booked */}
                   <button
                     type="button"
-                    style={{
-                      padding: '8px 16px',
-                      border: '1px solid #3b82f6',
-                      borderRadius: '6px',
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      fontSize: '14px',
-                      cursor: vehicle.status !== "approved" ? 'not-allowed' : 'pointer',
-                      fontWeight: '500',
-                      opacity: vehicle.status !== "approved" ? 0.6 : 1
-                    }}
+                    className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border border-transparent shadow-lg hover:shadow-orange-500/25"
                     onClick={() => onToggleAvailability(vehicle)}
-                    disabled={vehicle.status !== "approved"}
+                    disabled={vehicle.status !== "approved" || hasActiveBooking}
                     title={
                       vehicle.status !== "approved"
                         ? "Vehicle must be approved before availability can be changed"
+                        : hasActiveBooking
+                        ? "Cannot change availability with active bookings"
                         : undefined
                     }
                   >
                     {isAvailable ? "Mark Unavailable" : "Mark Available"}
                   </button>
+                  
+                  {/* Remove Button - Disabled when booked */}
                   <button
                     type="button"
-                    style={{
-                      padding: '8px 16px',
-                      border: '1px solid #dc2626',
-                      borderRadius: '6px',
-                      backgroundColor: '#dc2626',
-                      color: 'white',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      fontWeight: '500'
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      hasActiveBooking
+                        ? "bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed"
+                        : "bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 hover:border-red-500/40 hover:transform hover:scale-105"
+                    }`}
+                    onClick={() => {
+                      if (!hasActiveBooking) {
+                        onDelete(vehicle);
+                      }
                     }}
-                    onClick={() => onDelete(vehicle)}
+                    disabled={hasActiveBooking}
+                    title={
+                      hasActiveBooking
+                        ? "Cannot remove vehicle with active bookings"
+                        : "Remove vehicle from fleet"
+                    }
                   >
-                    Remove
+                    {hasActiveBooking ? "Cannot Remove" : "Remove"}
                   </button>
                 </div>
               </div>
@@ -268,59 +245,51 @@ function VehiclesPage({
   onShowFeedbackModal 
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <section className="driver-panel">
-        <header className="panel-header" style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center' 
-        }}>
-          <h3>My Vehicle Fleet</h3>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              type="button"
-              style={{
-                padding: '8px 16px',
-                border: '1px solid #6b7280',
-                borderRadius: '6px',
-                backgroundColor: 'white',
-                color: '#374151',
-                fontSize: '14px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-              onClick={onShowFeedbackModal}
-            >
-              View Feedback
-            </button>
-            <button
-              type="button"
-              style={{
-                padding: '8px 16px',
-                border: '1px solid #3b82f6',
-                borderRadius: '6px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                fontSize: '14px',
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-              onClick={onShowVehicleForm}
-            >
-              List a Vehicle
-            </button>
-          </div>
-        </header>
+    <div className="min-h-screen p-6 bg-black">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Main Panel */}
+        <div className="rounded-2xl p-6 shadow-2xl relative overflow-hidden bg-neutral-900 border border-neutral-800">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500 rounded-full blur-3xl opacity-5"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-orange-500 rounded-full blur-2xl opacity-5"></div>
+          
+          <div className="relative z-10">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-8 rounded-full bg-gradient-to-b from-orange-500 to-orange-600"></div>
+                <h1 className="text-2xl font-bold text-white">My Vehicle Fleet</h1>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 bg-transparent border border-neutral-700 text-gray-300 hover:bg-neutral-800 hover:border-neutral-600 hover:text-white"
+                  onClick={onShowFeedbackModal}
+                >
+                  View Feedback
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:transform hover:scale-105 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border border-transparent shadow-lg hover:shadow-orange-500/25"
+                  onClick={onShowVehicleForm}
+                >
+                  List a Vehicle
+                </button>
+              </div>
+            </div>
 
-        <VehicleList
-          vehicles={vehicles}
-          bookingsByVehicle={bookingsByVehicle}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onToggleAvailability={onToggleAvailability}
-          isLoading={isLoading}
-        />
-      </section>
+            {/* Vehicle List */}
+            <VehicleList
+              vehicles={vehicles}
+              bookingsByVehicle={bookingsByVehicle}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onToggleAvailability={onToggleAvailability}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

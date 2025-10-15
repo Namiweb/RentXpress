@@ -63,227 +63,320 @@ function EarningsOverview({ payments, isLoading }) {
   }, [payments]);
 
   return (
-    <section className="driver-panel">
-      <header className="panel-header">
-        <h3>Earnings Overview</h3>
-      </header>
-      {isLoading && (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p>Loading earnings...</p>
+    <div 
+      className="rounded-2xl p-6 shadow-xl relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #000000 0%, #171717 100%)',
+        border: '1px solid #262626'
+      }}
+    >
+      {/* Background decorative elements */}
+      <div 
+        className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl"
+        style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+      ></div>
+      <div 
+        className="absolute bottom-0 left-0 w-24 h-24 rounded-full blur-2xl"
+        style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+      ></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center space-x-3 mb-6">
+          <div 
+            className="w-2 h-8 rounded-full"
+            style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+          ></div>
+          <h3 className="text-xl font-bold text-white">Earnings Overview</h3>
         </div>
-      )}
-      {!isLoading && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '1rem'
-        }}>
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#f0fdf4'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', fontSize: '14px', fontWeight: '600', color: '#166534' }}>
-              Total Earned
-            </h4>
-            <p style={{ margin: '0', fontSize: '1.75rem', fontWeight: 'bold', color: '#15803d' }}>
-              {formatCurrency(summary.total, summary.currency)}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#16a34a' }}>
-              Lifetime earnings
-            </p>
+        
+        {isLoading && (
+          <div className="text-center py-8">
+            <div 
+              className="inline-block animate-spin rounded-full h-8 w-8 border-b-2"
+              style={{ borderColor: '#FF5A00' }}
+            ></div>
+            <p className="text-gray-400 mt-2">Loading earnings...</p>
           </div>
-          
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#fefce8'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', fontSize: '14px', fontWeight: '600', color: '#a16207' }}>
-              This Month
-            </h4>
-            <p style={{ margin: '0', fontSize: '1.75rem', fontWeight: 'bold', color: '#ca8a04' }}>
-              {formatCurrency(summary.month, summary.currency)}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#eab308' }}>
-              Current month
-            </p>
+        )}
+        
+        {!isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Total Earned Card */}
+            <div 
+              className="rounded-xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                border: '1px solid #404040'
+              }}
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #16A34A, #22C55E)' }}
+                >
+                  <span className="text-white font-bold text-lg">₨</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-300">Total Earned</h4>
+              </div>
+              <p className="text-2xl font-bold text-white mb-1">
+                {formatCurrency(summary.total, summary.currency)}
+              </p>
+              <p className="text-xs text-gray-400">Lifetime earnings</p>
+            </div>
+            
+            {/* This Month Card */}
+            <div 
+              className="rounded-xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                border: '1px solid #404040'
+              }}
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #D97706, #F59E0B)' }}
+                >
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-300">This Month</h4>
+              </div>
+              <p className="text-2xl font-bold text-white mb-1">
+                {formatCurrency(summary.month, summary.currency)}
+              </p>
+              <p className="text-xs text-gray-400">Current month</p>
+            </div>
+            
+            {/* Today Card */}
+            <div 
+              className="rounded-xl p-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                border: '1px solid #404040'
+              }}
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #2563EB, #3B82F6)' }}
+                >
+                  <span className="text-white font-bold text-lg">T</span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-300">Today</h4>
+              </div>
+              <p className="text-2xl font-bold text-white mb-1">
+                {formatCurrency(summary.today, summary.currency)}
+              </p>
+              <p className="text-xs text-gray-400">Today's earnings</p>
+            </div>
           </div>
-          
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#eff6ff'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>
-              Today
-            </h4>
-            <p style={{ margin: '0', fontSize: '1.75rem', fontWeight: 'bold', color: '#2563eb' }}>
-              {formatCurrency(summary.today, summary.currency)}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#3b82f6' }}>
-              Today's earnings
-            </p>
-          </div>
-        </div>
-      )}
-    </section>
+        )}
+      </div>
+    </div>
   );
 }
 
 function WithdrawalSection({ pending, completed, onUpdateStatus, isLoading }) {
   return (
-    <section className="driver-panel">
-      <header className="panel-header">
-        <h3>Payment Withdrawals</h3>
-      </header>
-      {isLoading && (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p>Loading payouts...</p>
+    <div 
+      className="rounded-2xl p-6 shadow-xl relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #000000 0%, #171717 100%)',
+        border: '1px solid #262626'
+      }}
+    >
+      {/* Background decorative elements */}
+      <div 
+        className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl"
+        style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+      ></div>
+      <div 
+        className="absolute bottom-0 left-0 w-24 h-24 rounded-full blur-2xl"
+        style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+      ></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center space-x-3 mb-6">
+          <div 
+            className="w-2 h-8 rounded-full"
+            style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+          ></div>
+          <h3 className="text-xl font-bold text-white">Payment Withdrawals</h3>
         </div>
-      )}
-      {!isLoading && (
-        <>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            <div>
-              <p style={{ margin: '0', fontSize: '14px', fontWeight: '600' }}>
-                Pending requests: <span style={{ color: '#f59e0b' }}>{pending.length}</span>
-              </p>
-              <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-                Processed: <span style={{ color: '#10b981' }}>{completed.length}</span>
-              </p>
-            </div>
+        
+        {isLoading && (
+          <div className="text-center py-8">
+            <div 
+              className="inline-block animate-spin rounded-full h-8 w-8 border-b-2"
+              style={{ borderColor: '#FF5A00' }}
+            ></div>
+            <p className="text-gray-400 mt-2">Loading payouts...</p>
           </div>
-
-          {/* Pending Withdrawals */}
-          {pending.length > 0 ? (
-            <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ margin: '0 0 1rem', fontSize: '16px', fontWeight: '600' }}>
-                Pending Withdrawals
-              </h4>
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                {pending.map((payment) => (
-                  <div key={payment._id} style={{
-                    border: '1px solid #fef3c7',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    backgroundColor: '#fffbeb'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <h5 style={{ margin: '0 0 0.5rem', fontSize: '14px', fontWeight: '600' }}>
-                          Payout {payment.paymentId || payment._id}
-                        </h5>
-                        <p style={{ margin: '0 0 0.25rem', fontSize: '16px', fontWeight: 'bold', color: '#92400e' }}>
-                          {formatCurrency(payment.amount, payment.currency)}
-                        </p>
-                        <p style={{ margin: '0', fontSize: '12px', color: '#6b7280' }}>
-                          Requested: {formatDate(payment.createdAt, true)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '8px 16px',
-                          border: '1px solid #10b981',
-                          borderRadius: '6px',
-                          backgroundColor: '#10b981',
-                          color: 'white',
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          fontWeight: '500'
-                        }}
-                        onClick={() => onUpdateStatus(payment, "completed")}
-                      >
-                        Mark as Received
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        )}
+        
+        {!isLoading && (
+          <>
+            {/* Summary Stats */}
+            <div 
+              className="rounded-xl p-4 mb-6"
+              style={{
+                background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                border: '1px solid #404040'
+              }}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-gray-300 font-semibold">
+                    Pending requests: <span style={{ color: '#FBBF24' }}>{pending.length}</span>
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Processed: <span style={{ color: '#10B981' }}>{completed.length}</span>
+                  </p>
+                </div>
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #404040 0%, #262626 100%)'
+                  }}
+                >
+                  <span className="font-bold text-lg" style={{ color: '#FF5A00' }}>💰</span>
+                </div>
               </div>
             </div>
-          ) : (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '2rem',
-              border: '1px dashed #d1d5db',
-              borderRadius: '8px',
-              marginBottom: '2rem'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '1rem' }}>💰</div>
-              <h4 style={{ margin: '0 0 0.5rem', color: '#374151' }}>No pending withdrawals</h4>
-              <p style={{ margin: '0', color: '#6b7280' }}>
-                All payment requests have been processed.
-              </p>
-            </div>
-          )}
 
-          {/* Completed Withdrawals History */}
-          {completed.length > 0 && (
-            <details style={{ 
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '1rem'
-            }}>
-              <summary style={{ 
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '600',
-                marginBottom: '1rem'
-              }}>
-                View completed withdrawals ({completed.length})
-              </summary>
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
-                {completed.map((payment) => (
-                  <div key={payment._id} style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    backgroundColor: '#f9fafb'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h5 style={{ margin: '0 0 0.25rem', fontSize: '14px', fontWeight: '600' }}>
-                          {payment.paymentId || payment._id}
-                        </h5>
-                        <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-                          Completed: {formatDate(payment.updatedAt || payment.processedAt, true)}
-                        </p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: '0', fontSize: '16px', fontWeight: '600', color: '#10b981' }}>
-                          {formatCurrency(payment.amount, payment.currency)}
-                        </p>
-                        <span style={{ 
-                          fontSize: '12px',
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          backgroundColor: '#dcfce7',
-                          color: '#166534'
-                        }}>
-                          Completed
-                        </span>
+            {/* Pending Withdrawals */}
+            {pending.length > 0 ? (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <span>Pending Withdrawals</span>
+                  <span 
+                    className="text-white text-xs px-2 py-1 rounded-full"
+                    style={{ backgroundColor: '#F59E0B' }}
+                  >
+                    {pending.length}
+                  </span>
+                </h4>
+                <div className="space-y-4">
+                  {pending.map((payment) => (
+                    <div 
+                      key={payment._id}
+                      className="rounded-xl p-4 shadow-lg transition-all duration-300"
+                      style={{
+                        background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                        border: '1px solid rgba(245, 158, 11, 0.2)'
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h5 className="text-gray-300 font-semibold mb-2">
+                            Payout {payment.paymentId || payment._id}
+                          </h5>
+                          <p 
+                            className="text-2xl font-bold mb-2"
+                            style={{ color: '#FBBF24' }}
+                          >
+                            {formatCurrency(payment.amount, payment.currency)}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            Requested: {formatDate(payment.createdAt, true)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:transform hover:scale-105"
+                          style={{
+                            background: 'linear-gradient(to right, #FF5A00, #EA580C)'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = 'linear-gradient(to right, #EA580C, #FF5A00)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = 'linear-gradient(to right, #FF5A00, #EA580C)';
+                          }}
+                          onClick={() => onUpdateStatus(payment, "completed")}
+                        >
+                          Mark as Received
+                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </details>
-          )}
-        </>
-      )}
-    </section>
+            ) : (
+              <div 
+                className="text-center py-8 border-2 border-dashed rounded-xl mb-8"
+                style={{ borderColor: '#404040' }}
+              >
+                <div className="text-4xl mb-3">💰</div>
+                <h4 className="text-gray-300 font-semibold mb-2">No pending withdrawals</h4>
+                <p className="text-gray-400">
+                  All payment requests have been processed.
+                </p>
+              </div>
+            )}
+
+            {/* Completed Withdrawals History */}
+            {completed.length > 0 && (
+              <details 
+                className="rounded-xl p-4"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <summary className="cursor-pointer text-white font-semibold text-lg mb-4 list-none">
+                  <div className="flex items-center justify-between">
+                    <span>View completed withdrawals ({completed.length})</span>
+                    <span className="text-gray-400">▼</span>
+                  </div>
+                </summary>
+                <div className="space-y-3 mt-4">
+                  {completed.map((payment) => (
+                    <div 
+                      key={payment._id}
+                      className="rounded-lg p-4 transition-all duration-200 hover:border-green-500/30"
+                      style={{
+                        background: 'linear-gradient(135deg, #404040 0%, #262626 100%)',
+                        border: '1px solid #525252'
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h5 className="text-gray-300 font-semibold text-sm mb-1">
+                            {payment.paymentId || payment._id}
+                          </h5>
+                          <p className="text-gray-400 text-xs">
+                            Completed: {formatDate(payment.updatedAt || payment.processedAt, true)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p 
+                            className="font-bold text-lg"
+                            style={{ color: '#10B981' }}
+                          >
+                            {formatCurrency(payment.amount, payment.currency)}
+                          </p>
+                          <span 
+                            className="inline-block text-xs px-2 py-1 rounded-full border"
+                            style={{
+                              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                              color: '#10B981',
+                              borderColor: 'rgba(16, 185, 129, 0.3)'
+                            }}
+                          >
+                            Completed
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -304,18 +397,50 @@ function FinancePage({ payments, isLoading, onUpdatePaymentStatus }) {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <EarningsOverview 
-        payments={completedPayments} 
-        isLoading={isLoading} 
-      />
-      
-      <WithdrawalSection
-        pending={pendingWithdrawals}
-        completed={completedWithdrawals}
-        onUpdateStatus={onUpdatePaymentStatus}
-        isLoading={isLoading}
-      />
+    <div 
+      className="min-h-screen p-6"
+      style={{
+        background: 'linear-gradient(135deg, #000000 0%, #171717 100%)'
+      }}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 
+              className="text-3xl font-bold bg-clip-text text-transparent"
+              style={{
+                backgroundImage: 'linear-gradient(to right, #FF5A00, #EA580C)'
+              }}
+            >
+              Finance Dashboard
+            </h1>
+            <p className="text-gray-400">Manage your earnings and withdrawals</p>
+          </div>
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center border"
+            style={{
+              background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+              borderColor: '#404040'
+            }}
+          >
+            <span className="font-bold text-lg" style={{ color: '#FF5A00' }}>$</span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <EarningsOverview 
+          payments={completedPayments} 
+          isLoading={isLoading} 
+        />
+        
+        <WithdrawalSection
+          pending={pendingWithdrawals}
+          completed={completedWithdrawals}
+          onUpdateStatus={onUpdatePaymentStatus}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

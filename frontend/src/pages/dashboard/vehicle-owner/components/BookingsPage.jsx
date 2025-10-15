@@ -198,336 +198,362 @@ function BookingsPage({ bookings, vehiclesMap, isLoading }) {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <section className="driver-panel">
-        <header className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>Manage Bookings</h3>
-          <button
-            onClick={handleGenerateReport}
-            disabled={isGeneratingReport || filtered.length === 0}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              backgroundColor: isGeneratingReport ? '#6b7280' : '#3b82f6',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: isGeneratingReport || filtered.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: isGeneratingReport || filtered.length === 0 ? 0.6 : 1,
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            {isGeneratingReport ? (
-              <>
-                <div style={{ 
-                  width: '16px', 
-                  height: '16px', 
-                  border: '2px solid transparent',
-                  borderTop: '2px solid white',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }}></div>
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14,2 14,8 20,8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10,9 9,9 8,9"></polyline>
-                </svg>
-                Download PDF Report
-              </>
-            )}
-          </button>
-        </header>
-
-        {/* Search Section */}
-        <div style={{ 
-          backgroundColor: '#f8fafc', 
-          border: '1px solid #e2e8f0', 
-          borderRadius: '8px', 
-          padding: '16px', 
-          margin: '16px 0'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <input
-                type="text"
-                placeholder="Search by vehicle, date..."
-                value={searchTerm}
-                onChange={handleSearchChange}
+    <div 
+      className="min-h-screen p-6"
+      style={{
+        background: 'linear-gradient(135deg, #000000 0%, #171717 100%)'
+      }}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div 
+          className="rounded-2xl p-6 shadow-xl relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #000000 0%, #171717 100%)',
+            border: '1px solid #262626'
+          }}
+        >
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-2 h-8 rounded-full"
+                  style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+                ></div>
+                <h1 className="text-2xl font-bold text-white">Manage Bookings</h1>
+              </div>
+              <button
+                onClick={handleGenerateReport}
+                disabled={isGeneratingReport || filtered.length === 0}
+                className="flex items-center space-x-2 text-white font-semibold transition-all duration-200 hover:shadow-lg hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 style={{
-                  width: '100%',
-                  padding: '10px 40px 10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
+                  background: isGeneratingReport ? '' : 'linear-gradient(to right, #FF5A00, #EA580C)',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-              />
+                onMouseOver={(e) => {
+                  if (!isGeneratingReport && filtered.length > 0) {
+                    e.target.style.background = 'linear-gradient(to right, #EA580C, #FF5A00)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!isGeneratingReport && filtered.length > 0) {
+                    e.target.style.background = 'linear-gradient(to right, #FF5A00, #EA580C)';
+                  }
+                }}
+              >
+                {isGeneratingReport ? (
+                  <>
+                    <div 
+                      className="w-5 h-5 rounded-full border-2 border-transparent border-t-white animate-spin"
+                    ></div>
+                    <span>Generating PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14,2 14,8 20,8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10,9 9,9 8,9"></polyline>
+                    </svg>
+                    <span>Download PDF Report</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Search Section */}
+            <div 
+              className="rounded-xl p-4 mb-6"
+              style={{
+                background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                border: '1px solid #404040'
+              }}
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by vehicle, date, status..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="w-full text-white placeholder-gray-400"
+                    style={{
+                      padding: '12px 40px 12px 16px',
+                      background: '#171717',
+                      border: '1px solid #404040',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#FF5A00'}
+                    onBlur={(e) => e.target.style.borderColor = '#404040'}
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={clearSearch}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '4px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Search Tips */}
+              <div 
+                className="rounded-lg p-3"
+                style={{
+                  background: 'rgba(255, 90, 0, 0.1)',
+                  border: '1px solid rgba(255, 90, 0, 0.2)'
+                }}
+              >
+                <p className="text-sm" style={{ color: '#FFA500' }}>
+                  <strong>💡 Search tips:</strong> Try searching by vehicle name (Toyota), date (2024, October, 15), 
+                  status (pending), or booking ID
+                </p>
+              </div>
+
+              {/* Search Results Info */}
               {searchTerm && (
-                <button
-                  onClick={clearSearch}
+                <div 
+                  className="rounded-lg p-3 mt-3"
                   style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: '#6b7280',
-                    cursor: 'pointer',
-                    padding: '4px'
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)'
                   }}
                 >
-                  ✕
-                </button>
+                  <p className="text-sm font-medium" style={{ color: '#60A5FA' }}>
+                    <strong>Search results:</strong> Found {filtered.length} booking{filtered.length !== 1 ? 's' : ''} 
+                    {baseFiltered.length !== filtered.length && (
+                      <span> (from {baseFiltered.length} total in this view)</span>
+                    )}
+                    {filtered.length === 0 && (
+                      <span> - No bookings match your search criteria</span>
+                    )}
+                  </p>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Search Tips */}
-          <div style={{ 
-            marginTop: '12px', 
-            padding: '8px 12px', 
-            backgroundColor: '#f0f9ff', 
-            borderRadius: '4px',
-            fontSize: '12px',
-            color: '#0369a1',
-            border: '1px solid #bae6fd'
-          }}>
-            <strong>💡 Search tips:</strong> Try searching by vehicle name (Toyota), date (2024, October, 15), 
-            status (pending), or booking ID
-          </div>
-
-          {/* Search Results Info */}
-          {searchTerm && (
-            <div style={{ 
-              marginTop: '12px', 
-              padding: '8px 12px', 
-              backgroundColor: '#dbeafe', 
-              borderRadius: '4px',
-              fontSize: '14px',
-              color: '#1e40af'
-            }}>
-              <strong>Search results:</strong> Found {filtered.length} booking{filtered.length !== 1 ? 's' : ''} 
-              {baseFiltered.length !== filtered.length && (
-                <span> (from {baseFiltered.length} total in this view)</span>
-              )}
-              {filtered.length === 0 && (
-                <span> - No bookings match your search criteria</span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '1rem' }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
+            {/* Tab Navigation */}
+            <div 
+              className="flex space-x-1 p-1 rounded-lg mb-6"
               style={{
-                padding: '12px 16px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                cursor: 'pointer',
-                borderBottom: tab.id === activeTab ? '2px solid #3b82f6' : '2px solid transparent',
-                color: tab.id === activeTab ? '#3b82f6' : '#6b7280',
-                fontWeight: tab.id === activeTab ? '600' : '400',
-                fontSize: '14px'
+                background: '#171717',
+                border: '1px solid #404040'
               }}
-              onClick={() => setActiveTab(tab.id)}
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className="flex-1 py-3 px-4 rounded-md transition-all duration-200 font-medium"
+                  style={{
+                    background: tab.id === activeTab 
+                      ? 'linear-gradient(135deg, #FF5A00, #EA580C)' 
+                      : 'transparent',
+                    color: tab.id === activeTab ? 'white' : '#9CA3AF',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Booking Count Info */}
-        {!isLoading && (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            padding: '12px 0',
-            fontSize: '14px',
-            color: '#6b7280',
-            borderBottom: '1px solid #e5e7eb',
-            marginBottom: '1rem'
-          }}>
-            <span>
-              {searchTerm ? 'Search results: ' : 'Showing '}
-              {filtered.length} booking{filtered.length !== 1 ? 's' : ''}
-              {searchTerm && baseFiltered.length !== filtered.length && (
-                <span> (from {baseFiltered.length} total in "{activeTab}" view)</span>
-              )}
-            </span>
-            <span style={{ 
-              padding: '4px 8px', 
-              backgroundColor: filtered.length > 0 ? '#dcfce7' : '#f3f4f6',
-              color: filtered.length > 0 ? '#166534' : '#6b7280',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: '500'
-            }}>
-              {filtered.length > 0 ? 'Ready for PDF export' : 'No bookings to export'}
-            </span>
-          </div>
-        )}
+            {/* Booking Count Info */}
+            {!isLoading && (
+              <div 
+                className="flex justify-between items-center p-4 rounded-lg mb-6"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <span className="text-gray-300">
+                  {searchTerm ? 'Search results: ' : 'Showing '}
+                  {filtered.length} booking{filtered.length !== 1 ? 's' : ''}
+                  {searchTerm && baseFiltered.length !== filtered.length && (
+                    <span> (from {baseFiltered.length} total in "{activeTab}" view)</span>
+                  )}
+                </span>
+                <span 
+                  className="px-3 py-1 rounded-full text-sm font-medium"
+                  style={{
+                    background: filtered.length > 0 
+                      ? 'rgba(34, 197, 94, 0.2)' 
+                      : 'rgba(156, 163, 175, 0.2)',
+                    color: filtered.length > 0 ? '#4ADE80' : '#9CA3AF',
+                    border: filtered.length > 0 
+                      ? '1px solid rgba(34, 197, 94, 0.3)' 
+                      : '1px solid rgba(156, 163, 175, 0.3)'
+                  }}
+                >
+                  {filtered.length > 0 ? 'Ready for PDF export' : 'No bookings to export'}
+                </span>
+              </div>
+            )}
 
-        {/* Loading State */}
-        {isLoading && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-            <div style={{ 
-              width: '32px', 
-              height: '32px', 
-              border: '3px solid #e5e7eb',
-              borderTop: '3px solid #3b82f6',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px'
-            }}></div>
-            Loading bookings...
-          </div>
-        )}
-        
-        {/* Empty States */}
-        {!isLoading && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-            {searchTerm ? (
-              <>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                <h4 style={{ margin: '0 0 8px', color: '#374151' }}>No matching bookings found</h4>
-                <p style={{ margin: 0 }}>
-                  No bookings match "<strong>{searchTerm}</strong>" in the {activeTab} view.
-                </p>
-                <p style={{ margin: '8px 0 0', fontSize: '14px' }}>
-                  Try adjusting your search terms or check different search filters.
-                </p>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-                <h4 style={{ margin: '0 0 8px', color: '#374151' }}>No bookings in this view</h4>
-                <p style={{ margin: 0 }}>
-                  Switch to a different tab or wait for customers to book your vehicles.
-                </p>
-              </>
+            {/* Loading State */}
+            {isLoading && (
+              <div 
+                className="text-center py-12 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-full border-4 border-gray-600 border-t-orange-500 animate-spin mx-auto mb-4"
+                ></div>
+                <p className="text-gray-400">Loading bookings...</p>
+              </div>
+            )}
+            
+            {/* Empty States */}
+            {!isLoading && filtered.length === 0 && (
+              <div 
+                className="text-center py-16 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                {searchTerm ? (
+                  <>
+                    <div className="text-5xl mb-4">🔍</div>
+                    <h4 className="text-xl font-semibold text-white mb-2">No matching bookings found</h4>
+                    <p className="text-gray-400 mb-2">
+                      No bookings match "<strong className="text-orange-400">{searchTerm}</strong>" in the {activeTab} view.
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                      Try adjusting your search terms or check different search filters.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-5xl mb-4">📋</div>
+                    <h4 className="text-xl font-semibold text-white mb-2">No bookings in this view</h4>
+                    <p className="text-gray-400">
+                      Switch to a different tab or wait for customers to book your vehicles.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+            
+            {/* Booking List */}
+            {!isLoading && filtered.length > 0 && (
+              <div className="grid gap-4">
+                {filtered.map((booking) => {
+                  const vehicleId = normalizeId(booking.vehicleId);
+                  const vehicle = vehiclesMap[vehicleId];
+                  const vehicleLabel =
+                    [vehicle?.basicInfo?.make, vehicle?.basicInfo?.model]
+                      .filter((value) => typeof value === "string" && value.trim())
+                      .join(" ") ||
+                    vehicle?.basicInfo?.displayName ||
+                    "Vehicle";
+                  const licensePlate =
+                    (typeof vehicle?.basicInfo?.licensePlate === "string" && vehicle.basicInfo.licensePlate.trim()) ||
+                    "N/A";
+                  const pickupDate = formatDate(booking.bookingDetails?.startDate);
+                  const dropoffDate = formatDate(booking.bookingDetails?.endDate);
+                  const pickupTime = booking.bookingDetails?.pickupTime;
+                  const returnTime = booking.bookingDetails?.returnTime;
+                  const pickupLabel = pickupTime ? `${pickupDate} at ${pickupTime}` : pickupDate;
+                  const dropoffLabel = returnTime ? `${dropoffDate} at ${returnTime}` : dropoffDate;
+
+                  return (
+                    <div 
+                      key={booking._id}
+                      className="rounded-xl p-6 transition-all duration-300 hover:transform hover:scale-105"
+                      style={{
+                        background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                        border: '1px solid #404040',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                      }}
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{vehicleLabel}</h3>
+                            {vehicle?.basicInfo?.year && (
+                              <span className="text-gray-400 ml-2">
+                                ({vehicle.basicInfo.year})
+                              </span>
+                            )}
+                          </div>
+                          <span 
+                            className="px-3 py-1 rounded-full text-xs font-medium"
+                            style={{
+                              background: 
+                                booking.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                ACTIVE_BOOKING_STATUSES.has(booking.status) ? 'rgba(34, 197, 94, 0.2)' : 'rgba(156, 163, 175, 0.2)',
+                              color:
+                                booking.status === 'pending' ? '#FBBF24' :
+                                ACTIVE_BOOKING_STATUSES.has(booking.status) ? '#4ADE80' : '#9CA3AF',
+                              border: 
+                                booking.status === 'pending' ? '1px solid rgba(245, 158, 11, 0.3)' :
+                                ACTIVE_BOOKING_STATUSES.has(booking.status) ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(156, 163, 175, 0.3)'
+                            }}
+                          >
+                            {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <span className="text-xs font-medium" style={{ color: '#9CA3AF' }}>Pickup</span>
+                            <p className="text-white mt-1">{pickupLabel}</p>
+                          </div>
+                          {dropoffDate !== "-" && (
+                            <div>
+                              <span className="text-xs font-medium" style={{ color: '#9CA3AF' }}>Return</span>
+                              <p className="text-white mt-1">{dropoffLabel}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+                          <p className="text-xs" style={{ color: '#6B7280' }}>
+                            Booking ID: {booking._id?.slice(-8)}
+                          </p>
+                          <p className="text-xs" style={{ color: '#6B7280' }}>
+                            Plate: {licensePlate}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
-        )}
-        
-        {/* Booking List */}
-        {!isLoading && filtered.length > 0 && (
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            {filtered.map((booking) => {
-              const vehicleId = normalizeId(booking.vehicleId);
-              const vehicle = vehiclesMap[vehicleId];
-              const vehicleLabel =
-                [vehicle?.basicInfo?.make, vehicle?.basicInfo?.model]
-                  .filter((value) => typeof value === "string" && value.trim())
-                  .join(" ") ||
-                vehicle?.basicInfo?.displayName ||
-                "Vehicle";
-              const licensePlate =
-                (typeof vehicle?.basicInfo?.licensePlate === "string" && vehicle.basicInfo.licensePlate.trim()) ||
-                "N/A";
-              const pickupDate = formatDate(booking.bookingDetails?.startDate);
-              const dropoffDate = formatDate(booking.bookingDetails?.endDate);
-              const pickupTime = booking.bookingDetails?.pickupTime;
-              const returnTime = booking.bookingDetails?.returnTime;
-              const pickupLabel = pickupTime ? `${pickupDate} at ${pickupTime}` : pickupDate;
-              const dropoffLabel = returnTime ? `${dropoffDate} at ${returnTime}` : dropoffDate;
 
-              return (
-                <div key={booking._id} style={{ 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '12px', 
-                  padding: '1.5rem',
-                  backgroundColor: 'white',
-                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-                }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div>
-                        <strong style={{ fontSize: '16px', color: '#1f2937' }}>{vehicleLabel}</strong>
-                        {vehicle?.basicInfo?.year && (
-                          <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '8px' }}>
-                            ({vehicle.basicInfo.year})
-                          </span>
-                        )}
-                      </div>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '6px 12px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        backgroundColor: 
-                          booking.status === 'pending' ? '#fef3c7' :
-                          ACTIVE_BOOKING_STATUSES.has(booking.status) ? '#dcfce7' : '#f3f4f6',
-                        color:
-                          booking.status === 'pending' ? '#92400e' :
-                          ACTIVE_BOOKING_STATUSES.has(booking.status) ? '#166534' : '#374151'
-                      }}>
-                        {booking.status}
-                      </span>
-                    </div>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
-                      <div>
-                        <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Pickup</span>
-                        <p style={{ margin: '2px 0 0', color: '#374151' }}>{pickupLabel}</p>
-                      </div>
-                      {dropoffDate !== "-" && (
-                        <div>
-                          <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500' }}>Return</span>
-                          <p style={{ margin: '2px 0 0', color: '#374151' }}>{dropoffLabel}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      paddingTop: '0.75rem',
-                      borderTop: '1px solid #f3f4f6'
-                    }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>
-                        Booking ID: {booking._id}
-                      </p>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>
-                        Plate: {licensePlate}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Add CSS for spinner animation */}
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
-      </section>
+          {/* Background decorative elements */}
+          <div 
+            className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl"
+            style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+          ></div>
+          <div 
+            className="absolute bottom-0 left-0 w-24 h-24 rounded-full blur-2xl"
+            style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+          ></div>
+        </div>
+      </div>
     </div>
   );
 }

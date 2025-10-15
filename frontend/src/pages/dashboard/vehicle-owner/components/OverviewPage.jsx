@@ -107,222 +107,340 @@ function OverviewPage({
 
   if (isLoading.vehicles || isLoading.bookings || isLoading.payments || isLoading.feedbacks) {
     return (
-      <div className="driver-panel">
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p>Loading overview...</p>
-        </div>
+      <div 
+        className="text-center py-12 rounded-xl"
+        style={{
+          background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+          border: '1px solid #404040'
+        }}
+      >
+        <div 
+          className="w-12 h-12 rounded-full border-4 border-gray-600 border-t-orange-500 animate-spin mx-auto mb-4"
+        ></div>
+        <p className="text-gray-400">Loading overview...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Quick Stats Grid */}
-      <section className="driver-panel">
-        <header className="panel-header">
-          <h3>Quick Overview</h3>
-        </header>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#f8fafc'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937', fontSize: '14px', fontWeight: '600' }}>
-              Total Vehicles
-            </h4>
-            <p style={{ margin: '0', fontSize: '2rem', fontWeight: 'bold', color: '#3b82f6' }}>
-              {vehicleStats.total}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#6b7280' }}>
-              {vehicleStats.approved} approved, {vehicleStats.pending} pending
-            </p>
-          </div>
+    <div 
+      className="min-h-screen p-6"
+      style={{
+        background: 'linear-gradient(135deg, #000000 0%, #171717 100%)'
+      }}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Main Panel */}
+        <div 
+          className="rounded-2xl p-6 shadow-xl relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #000000 0%, #171717 100%)',
+            border: '1px solid #262626'
+          }}
+        >
+          {/* Background decorative elements */}
+          <div 
+            className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl"
+            style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+          ></div>
+          <div 
+            className="absolute bottom-0 left-0 w-24 h-24 rounded-full blur-2xl"
+            style={{ backgroundColor: '#FF5A00', opacity: 0.05 }}
+          ></div>
+          
+          <div className="relative z-10">
+            {/* Header */}
+            <div className="flex items-center space-x-3 mb-6">
+              <div 
+                className="w-2 h-8 rounded-full"
+                style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+              ></div>
+              <h1 className="text-2xl font-bold text-white">Dashboard Overview</h1>
+            </div>
 
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#f0fdf4'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937', fontSize: '14px', fontWeight: '600' }}>
-              Active Bookings
-            </h4>
-            <p style={{ margin: '0', fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
-              {bookingStats.active}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#6b7280' }}>
-              {bookingStats.pending} pending approval
-            </p>
-          </div>
+            {/* Quick Stats Grid */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Vehicles Card */}
+                <div 
+                  className="rounded-xl p-4 transition-all duration-300 hover:transform hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                    border: '1px solid #404040'
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #3B82F6, #60A5FA)' }}
+                    >
+                      <span className="text-white font-bold text-lg">🚗</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-gray-300">Total Vehicles</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {vehicleStats.total}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {vehicleStats.approved} approved, {vehicleStats.pending} pending
+                  </p>
+                </div>
 
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#fffbeb'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937', fontSize: '14px', fontWeight: '600' }}>
-              Monthly Earnings
-            </h4>
-            <p style={{ margin: '0', fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
-              {formatCurrency(earningsStats.thisMonth, earningsStats.currency)}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#6b7280' }}>
-              {formatCurrency(earningsStats.today, earningsStats.currency)} today
-            </p>
-          </div>
+                {/* Active Bookings Card */}
+                <div 
+                  className="rounded-xl p-4 transition-all duration-300 hover:transform hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                    border: '1px solid #404040'
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}
+                    >
+                      <span className="text-white font-bold text-lg">📅</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-gray-300">Active Bookings</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {bookingStats.active}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {bookingStats.pending} pending approval
+                  </p>
+                </div>
 
-          <div style={{ 
-            border: '1px solid #e2e8f0', 
-            borderRadius: '12px', 
-            padding: '1rem',
-            backgroundColor: '#fef2f2'
-          }}>
-            <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937', fontSize: '14px', fontWeight: '600' }}>
-              Customer Rating
-            </h4>
-            <p style={{ margin: '0', fontSize: '2rem', fontWeight: 'bold', color: '#ef4444' }}>
-              {feedbackStats.averageRating > 0 ? feedbackStats.averageRating.toFixed(1) : '-'}
-            </p>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '12px', color: '#6b7280' }}>
-              {feedbackStats.total} reviews
-            </p>
+                {/* Monthly Earnings Card */}
+                <div 
+                  className="rounded-xl p-4 transition-all duration-300 hover:transform hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                    border: '1px solid #404040'
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}
+                    >
+                      <span className="text-white font-bold text-lg">💰</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-gray-300">Monthly Earnings</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {formatCurrency(earningsStats.thisMonth, earningsStats.currency)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {formatCurrency(earningsStats.today, earningsStats.currency)} today
+                  </p>
+                </div>
+
+                {/* Customer Rating Card */}
+                <div 
+                  className="rounded-xl p-4 transition-all duration-300 hover:transform hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                    border: '1px solid #404040'
+                  }}
+                >
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #EF4444, #F87171)' }}
+                    >
+                      <span className="text-white font-bold text-lg">⭐</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-gray-300">Customer Rating</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {feedbackStats.averageRating > 0 ? feedbackStats.averageRating.toFixed(1) : '-'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {feedbackStats.total} reviews
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Stats Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Fleet Status */}
+              <div 
+                className="rounded-xl p-6"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <div 
+                    className="w-2 h-6 rounded-full"
+                    style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+                  ></div>
+                  <span>Fleet Status</span>
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Available for Rent</span>
+                    <span 
+                      className="px-3 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        background: 'rgba(34, 197, 94, 0.2)',
+                        color: '#4ADE80',
+                        border: '1px solid rgba(34, 197, 94, 0.3)'
+                      }}
+                    >
+                      {vehicleStats.available}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Pending Approval</span>
+                    <span 
+                      className="px-3 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        background: 'rgba(245, 158, 11, 0.2)',
+                        color: '#FBBF24',
+                        border: '1px solid rgba(245, 158, 11, 0.3)'
+                      }}
+                    >
+                      {vehicleStats.pending}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Needs Maintenance</span>
+                    <span 
+                      className="px-3 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        color: '#F87171',
+                        border: '1px solid rgba(239, 68, 68, 0.3)'
+                      }}
+                    >
+                      {vehicleStats.needsMaintenance}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div 
+                className="rounded-xl p-6"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <div 
+                    className="w-2 h-6 rounded-full"
+                    style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+                  ></div>
+                  <span>Recent Activity</span>
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Total Bookings</span>
+                    <span className="text-white font-medium">{bookingStats.total}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">This Month</span>
+                    <span className="text-white font-medium">{bookingStats.thisMonth}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Completed</span>
+                    <span className="text-white font-medium">{bookingStats.completed}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div 
+                className="rounded-xl p-6"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <div 
+                    className="w-2 h-6 rounded-full"
+                    style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+                  ></div>
+                  <span>Financial Summary</span>
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Total Earned</span>
+                    <span className="text-white font-medium">
+                      {formatCurrency(earningsStats.totalEarnings, earningsStats.currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Pending Payout</span>
+                    <span className="text-yellow-400 font-medium">
+                      {formatCurrency(earningsStats.pendingAmount, earningsStats.currency)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Feedback */}
+              <div 
+                className="rounded-xl p-6"
+                style={{
+                  background: 'linear-gradient(135deg, #262626 0%, #171717 100%)',
+                  border: '1px solid #404040'
+                }}
+              >
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <div 
+                    className="w-2 h-6 rounded-full"
+                    style={{ background: 'linear-gradient(to bottom, #FF5A00, #EA580C)' }}
+                  ></div>
+                  <span>Recent Feedback</span>
+                </h3>
+                {feedbackStats.recent.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No feedback received yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {feedbackStats.recent.map((feedback, index) => {
+                      const rating = feedback.ratings?.vehicleRating || feedback.ratings?.overallRating || feedback.ratings?.serviceRating || 0;
+                      const comment = feedback.comments?.vehicleComment || feedback.comments?.serviceComment || 'No comment provided';
+                      
+                      return (
+                        <div 
+                          key={feedback._id || index}
+                          className="rounded-lg p-3"
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid #404040'
+                          }}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <span 
+                              className="text-sm font-medium"
+                              style={{ color: rating >= 4 ? '#4ADE80' : rating >= 3 ? '#FBBF24' : '#F87171' }}
+                            >
+                              {rating > 0 ? `${rating}/5 ⭐` : 'No rating'}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {formatDate(feedback.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-300 m-0">
+                            {comment.length > 60 ? `${comment.substring(0, 60)}...` : comment}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-        {/* Vehicle Status Summary */}
-        <section className="driver-panel">
-          <header className="panel-header">
-            <h3>Fleet Status</h3>
-          </header>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Available for Rent</span>
-              <span style={{ 
-                padding: '2px 8px', 
-                borderRadius: '12px', 
-                backgroundColor: '#dcfce7', 
-                color: '#166534',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}>
-                {vehicleStats.available}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Pending Approval</span>
-              <span style={{ 
-                padding: '2px 8px', 
-                borderRadius: '12px', 
-                backgroundColor: '#fef3c7', 
-                color: '#92400e',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}>
-                {vehicleStats.pending}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Needs Maintenance</span>
-              <span style={{ 
-                padding: '2px 8px', 
-                borderRadius: '12px', 
-                backgroundColor: '#fee2e2', 
-                color: '#991b1b',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}>
-                {vehicleStats.needsMaintenance}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Recent Bookings */}
-        <section className="driver-panel">
-          <header className="panel-header">
-            <h3>Recent Activity</h3>
-          </header>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6b7280' }}>
-              <span>Total Bookings</span>
-              <span>{bookingStats.total}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6b7280' }}>
-              <span>This Month</span>
-              <span>{bookingStats.thisMonth}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6b7280' }}>
-              <span>Completed</span>
-              <span>{bookingStats.completed}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Earnings Summary */}
-        <section className="driver-panel">
-          <header className="panel-header">
-            <h3>Financial Summary</h3>
-          </header>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-              <span>Total Earned</span>
-              <span style={{ fontWeight: '600' }}>
-                {formatCurrency(earningsStats.totalEarnings, earningsStats.currency)}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6b7280' }}>
-              <span>Pending Payout</span>
-              <span>{formatCurrency(earningsStats.pendingAmount, earningsStats.currency)}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Recent Feedback */}
-        <section className="driver-panel">
-          <header className="panel-header">
-            <h3>Recent Feedback</h3>
-          </header>
-          {feedbackStats.recent.length === 0 ? (
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>No feedback received yet.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {feedbackStats.recent.map((feedback, index) => {
-                const rating = feedback.ratings?.vehicleRating || feedback.ratings?.overallRating || feedback.ratings?.serviceRating || 0;
-                const comment = feedback.comments?.vehicleComment || feedback.comments?.serviceComment || 'No comment provided';
-                
-                return (
-                  <div key={feedback._id || index} style={{ 
-                    padding: '0.5rem', 
-                    border: '1px solid #e5e7eb', 
-                    borderRadius: '6px',
-                    fontSize: '12px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontWeight: '500' }}>
-                        {rating > 0 ? `${rating}/5 ⭐` : 'No rating'}
-                      </span>
-                      <span style={{ color: '#6b7280' }}>
-                        {formatDate(feedback.createdAt)}
-                      </span>
-                    </div>
-                    <p style={{ margin: '0', color: '#4b5563', fontSize: '11px' }}>
-                      {comment.length > 60 ? `${comment.substring(0, 60)}...` : comment}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   );
