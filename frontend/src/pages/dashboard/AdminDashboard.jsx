@@ -136,7 +136,7 @@ function OverviewSection({ metrics, currency, onRefresh, isLoading }) {
           <OverviewCard
             label="Total Earnings"
             value={formatCurrency(metrics.earnings, currency)}
-            helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
+            // helper={`Driver payouts: ${formatCurrency(metrics.payouts, currency)}`}
             loading={isLoading}
             variant="accent"
           />
